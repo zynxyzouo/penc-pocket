@@ -1,0 +1,71 @@
+{
+  "files": [
+    "bench.py",
+    "cpu.py",
+    "hd_host.py",
+    "host_clock.py",
+    "web_adapter.py"
+  ],
+  "core_sha256": "615f443673c814d31b6405a374d8d356ffbbf7d7e8a2e733921c12d69901e8aa",
+  "file_sha256": {
+    "bench.py": "0b4a27a9c457bb861401c61ae7a3385763e560238f50506101a7f246a5d00967",
+    "cpu.py": "090fce50d0c5733e5977fc6133403e8fde3f7d302714c5914570444e4494091d",
+    "hd_host.py": "e6ab735d014764485f2cf827b9d69ec21cdf44eb9a0f79b4afd6c3fe1ecc7f99",
+    "host_clock.py": "213beac2621bcd1db1c959bacab110aa25b9cde9ae3b824c6fdcf1207b95d8b3",
+    "web_adapter.py": "80527a3658c20996568fd4e6175dd46bea3fbeeb65e5acbde292f9b59adff84f"
+  },
+  "presentation_files": [
+    "view_projection.py"
+  ],
+  "presentation_sha256": {
+    "view_projection.py": "2cbbe0bb28e4fcd9895cf2267480c01d428e3a5a974a270515f8f6851674dd80"
+  },
+  "runtime_files": [
+    "audio_bridge.py",
+    "audio_completion.py",
+    "native_link_guard.py",
+    "network_battle.py",
+    "runtime_bridge.py",
+    "native_connector.py",
+    "native_boot.py",
+    "native_settings.py",
+    "away_bridge.py",
+    "continuity.py",
+    "sound_state.py"
+  ],
+  "runtime_sha256": {
+    "audio_bridge.py": "30d1c1ee3c4213d3882d73f150fbdac4ca310a693fdff2267ccb5d92b11a46c0",
+    "audio_completion.py": "53830afa57e969e5bcdcc9bf2a6dc7dde8ccbf9cf003f3985722c2b95e7e96b7",
+    "native_link_guard.py": "14853add02b5db714ee39c3451a8c9ae8c0a23255e98a4a16be2ed15bf597286",
+    "network_battle.py": "b0d335cc7dee745f2c52803bd2baedc078e8ba1147db129d070892df1d0065e9",
+    "runtime_bridge.py": "959ee65fd37d00eef96d47e4ee1a16a8ddb64e4c7758dd9b507e0bf26d5bed73",
+    "native_connector.py": "d8bc1d40e3c38dbf3540c424d15146cb5729450cfa101ee61dd74a8c74e0858d",
+    "native_boot.py": "92370b4e0edff6757652edfbce70910daa5bde0650735802ff71b34dfc904fb8",
+    "native_settings.py": "3c4e7d44b72c0b9fec4ca7fdc0c9bf2b0c83b550b423c0a1f7f8ce8c3f04de9e",
+    "away_bridge.py": "4b2d23c671bdc6e9f16458cf82577d458e93aefc286918a4933a77bddad75b21",
+    "continuity.py": "1fb46c890a8febbd5f4ce74be78806a1b6cc2e9237f0f59cd02cb70311c18441",
+    "sound_state.py": "82650eff5658004860d5eaee51e52b79624138965bb74bf87de5f2f746306a1e"
+  },
+  "family_files": [
+    "dmc_machine.py",
+    "dmc_render.py",
+    "dmc_runtime.py",
+    "family_router.py",
+    "stock_penc_machine.py",
+    "stock_penc_render.py",
+    "stock_penc_runtime.py",
+    "stock_penc_peripherals.py"
+  ],
+  "family_sha256": {
+    "dmc_machine.py": "2d6a93db48c76a97fe57ad3a7fd4ab161cd05eec05d876dcf9a41f6f81e97cdd",
+    "dmc_render.py": "98892125fbeeb44aeccac680d82f058b898337b8b74be15297083a5ae2861445",
+    "dmc_runtime.py": "08e1a25536ac7e50c23815269f71ac70ef6a9405e89d3deec9fcdca088c0e74a",
+    "family_router.py": "f035df838fd01f39423cf8238e36d6b6a148caf98dc53a3771ae5a1b27bcd574",
+    "stock_penc_machine.py": "5e358d0661468b06f92be59a8a55db9f33b7475655cfde06cb86d2d8ebf98759",
+    "stock_penc_render.py": "fe5bbf017519182a87279bdd21ad6b966a4e2004a22080d82062c8acef20d652",
+    "stock_penc_runtime.py": "577c9c1c84f8d7033f095b2cfed7d22e88ee2d4d756e31cc4c4b3a27a85a01a3",
+    "stock_penc_peripherals.py": "93a31286825f235a1e55c9d771e088c232540249bf55855cda3f6a9a1973bed4"
+  },
+  "dmc_core_sha256": "99ffb724dfbc1d6e7382a4bbd6bb79f20525eec5eb7e25b63b653b1cd81e3d21",
+  "stock_core_sha256": "ed530cd9f3f43cf40681cd8a9d31b0d2394bdfb76900e4228e1ee2e21afa50c9"
+}

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#152d29">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="PenC 手機網頁試作。在瀏覽器選取本機 BIN，操作部分原生流程並保存測試快照。">
+  <title>PenC Pocket · 口袋怪獸機</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body data-ui-mode="simple">
+<div class="display-viewport">
+<main class="stage">
+<section class="console" aria-label="PenC 怪獸對打機">
+<i class="screw tl" aria-hidden="true"></i><i class="screw tr" aria-hidden="true"></i><i class="screw bl" aria-hidden="true"></i><i class="screw br" aria-hidden="true"></i>
+<div class="device-brand" aria-hidden="true"><span class="brand-emblem">P</span><strong>PenC<span>POCKET</span></strong><span class="edition">VIRTUAL PET / 01</span><div class="grip"><i></i><i></i><i></i><i></i><i></i></div></div>
+<button id="menu-open" class="menu-toggle" aria-haspopup="dialog" aria-controls="menu-dialog" aria-label="開啟選單" title="開啟選單"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><i id="status-dot" aria-hidden="true"></i></button>
+<button id="orientation-toggle" class="menu-toggle orientation-toggle" aria-label="一鍵橫向" title="一鍵橫向" aria-pressed="false"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M16 3a9 9 0 0 0-10 1M6 1v3h3M18 12v1"/></svg></button>
+<div class="screen-bezel">
+<div class="screen-heading"><span>PENC POCKET</span><span>EMULATOR</span></div>
+<div class="screen-wrap"><canvas id="screen" width="96" height="96" aria-label="96 × 96 模擬畫面"></canvas><div id="empty-screen" class="empty-screen"><div class="pixel-glyph">▥</div><strong>PenC Pocket</strong><span>你的口袋小世界</span></div><button id="screen-action" class="screen-action">＋ 載入 BIN</button></div>
+<div class="screen-caption"><span id="live-state">等待載入</span></div>
+</div>
+<div class="control-deck">
+<button id="link-indicator" class="link-indicator" hidden aria-label="已連線，點一下中斷連線" title="點一下中斷連線">● 已連線 · 中斷</button>
+<div class="device-clock" title="目前遊戲時間"><span id="clock-status" class="visually-hidden">GAME TIME</span><canvas id="clock-screen" width="96" height="48" aria-label="遊戲時間，尚未載入" hidden></canvas><span id="clock">--:--:--</span></div>
+<div class="controls" aria-label="遊戲按鍵">
+<div><button class="game-key" data-key="A" disabled aria-label="A 選擇">A</button><span>SELECT</span></div>
+<div><button class="game-key key-b" data-key="B" disabled aria-label="B 確認">B</button><span>ENTER</span></div>
+<div><button class="game-key" data-key="C" disabled aria-label="C 返回">C</button><span>CANCEL</span></div>
+</div>
+</div>
+<div class="speaker" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<aside id="developer-panel" class="developer-panel" aria-label="開發資訊" hidden>
+  <div><span class="dev-label">DISPLAY FPS</span><strong id="dev-fps">—</strong><small>SIM <span id="dev-sim">—</span> Hz</small><small id="dev-status">NO ROM</small></div>
+  <div><span class="dev-label">GAME RTC</span><strong id="dev-rtc">--:--:--</strong><small>TIME <span id="dev-rate">1×</span></small></div>
+  <div><span class="dev-label">WORKER / STATE</span><strong id="dev-cost">—</strong><small>STATE <span id="dev-state">—</span></small></div>
+  <div><span class="dev-label">KEY INPUT</span><div class="dev-keys"><b id="dev-key-A">A</b><b id="dev-key-B">B</b><b id="dev-key-C">C</b></div><small>目前送入核心</small></div>
+  <div class="dev-rom"><span class="dev-label">ROM</span><strong id="dev-rom">尚未載入</strong><small id="dev-hash">—</small></div>
+</aside>
+</section>
+</main>
+</div>
+<dialog id="menu-dialog" class="menu-dialog" aria-labelledby="menu-title">
+<header class="menu-header"><div><span class="eyebrow">PENC POCKET</span><h1 id="menu-title">Menu</h1></div><button id="menu-close" aria-label="關閉 Menu">×</button></header>
+<div class="menu-content">
+<div class="playbar"><button id="play" class="primary" disabled>▶ 開始</button><button id="step" disabled>單步</button><span id="perf">本機執行</span><span id="speed">1× TIME</span></div>
+<div class="status-strip" aria-live="polite"><p id="status">選取本機 BIN 開始。遊戲檔案與快照都留在這台裝置。</p></div>
+        <section class="panel mode-panel">
+          <div class="section-label"><span>介面模式</span><span>共用目前進度</span></div>
+          <div class="mode-options" role="group" aria-label="介面模式"><button id="mode-simple" aria-pressed="true">簡潔模式</button><button id="mode-original" aria-pressed="false">原機模式</button><button id="mode-developer" aria-pressed="false">開發模式</button></div>
+          <p id="mode-description" class="muted">簡潔模式：保留最大遊戲畫面、時鐘與 ABC 按鍵。</p>
+        </section>
+        <section class="panel view-panel">
+          <div class="section-label"><span>顯示比例</span><span>橫向全部畫面</span></div>
+          <button id="orientation-menu" class="resume-button" aria-pressed="false">一鍵橫向</button>
+          <p id="orientation-status" class="muted" aria-live="polite">自動跟隨畫面方向；也可一鍵切成橫向，不需重載遊戲。</p>
+          <div class="view-options" role="group" aria-label="顯示比例"><button id="view-focus" aria-pressed="true">角色放大</button><button id="view-standard" aria-pressed="false">標準寬景</button></div>
+          <p class="muted">超代彩改版的角色放大：上下收成細條，中間等比例放大約 40%。時鐘、吃飯及其他功能頁都維持相同比例；直向使用原比例。若頁面文字靠近上下邊緣，可切回標準寬景閱讀。原版 TEST4 與 DMC 保留完整原生比例，橫向延伸兩側顏色。</p>
+        </section>
+        <section class="panel motion-panel">
+          <div class="section-label"><span>手機晃動</span><span>訓練與連線</span></div>
+          <button id="motion-enable" class="resume-button" aria-pressed="true">停用手機晃動</button>
+          <p id="motion-status" class="muted" aria-live="polite">預設開啟；按「開始／繼續」時，若出現動作權限請選允許。</p>
+          <p class="save-note">訓練與連線的晃動由遊戲本身計數。Menu、暫停及背景不收集輸入。靈敏度為網頁試作設定。</p>
+        </section>
+        <section class="panel">
+          <div class="section-label"><span>手機對手機</span><span>遊戲內連線</span></div>
+          <button id="link-open" class="resume-button" disabled>配對另一支手機 ↗</button>
+          <p id="relay-status" class="muted">此版本尚未設定配對服務；單機養成可以正常使用。</p>
+        </section>
+        <section class="panel">
+          <div class="section-label"><span>聲音與亮度</span><span>跟隨遊戲設定</span></div>
+          <button id="sound-enable" class="resume-button" aria-pressed="true">停用聲音</button>
+          <p id="native-settings-status" class="muted">載入後顯示遊戲音量與亮度。</p>
+          <p class="muted">主畫面長按 C 開啟遊戲設定，調整 SOUND／BRIGHT。已套用確認的音高與速度；音量及亮度階級以網頁近似呈現。</p>
+          <button id="sound-preview" class="resume-button" disabled>試聽最近音效</button>
+          <p id="sound-status" class="muted">預設開啟；按「開始／繼續」時啟動聲音。</p>
+        </section>
+        <section class="panel file-panel">
+          <div class="section-label"><span>遊戲檔案</span><span class="local-badge">僅在本機</span></div>
+          
+          <p class="muted">只需從 iPhone「檔案」選取 BIN，模擬設定自動配對。BIN 與快照都留在本機。</p>
+          <label class="file-button" id="file-label" for="bin-file"><span>＋</span> 選取本機 BIN <span class="file-suffix">8 MiB</span></label>
+          <input id="bin-file" type="file" accept=".bin,application/octet-stream" class="visually-hidden">
+          <button id="resume" class="resume-button" hidden>繼續上次的測試 →</button>
+          <label class="remember"><input id="remember" type="checkbox" checked><span>在這台裝置記住 BIN</span></label>
+          <div id="file-info" class="file-info">已收錄原版 TEST4、PenC R18／R19／R20、HD R19h3／R20h4 與 DMC 線條小狗 v4.1。新版本需加入網站識別表，使用時仍只選 BIN。各版快照分開保存。</div>
+          <div class="file-footer"><span id="identity">尚未載入</span><button id="reset" disabled>新遊戲・從蛋開始</button></div>
+        </section>
+        <section class="panel save-panel">
+          <div class="section-label"><span>存檔與備份</span><span id="save-state">尚無快照</span></div>
+          <p id="family-status" class="muted">依 BIN 自動選擇原版超代彩、超代彩改版或 DMC 方彩。</p>
+          <p id="away-status" class="muted">離開補算是否支援，依載入的機型顯示。</p>
+          
+          <p class="muted">執行中定期保存在瀏覽器。匯出一份到「檔案」，可備份或換裝置。</p>
+          <div class="save-actions"><button id="save" disabled>立即保存</button><button id="export" disabled>匯出備份 ↗</button><button id="import" disabled>匯入快照</button></div>
+          <button id="restore-game" class="resume-button" disabled>還原新遊戲前進度</button>
+          <input id="save-file" type="file" accept=".json,application/json" class="visually-hidden">
+          <p class="save-note" id="storage-note">瀏覽器資料可能被清除，請定期匯出。快照需搭配相同 BIN，不能直接寫回實體機。</p>
+        </section>
+        <details class="panel details-panel">
+          <summary>這個試作能做什麼？<span>＋</span></summary>
+          <p>可從原生開機畫面設定時間、選蛋與孵化；現有快照仍保留原進度。完整生命週期與實體機驗證尚未完成。手機晃動及聲音預設開啟，首次按開始時依瀏覽器要求授權。</p>
+          <p>此 GitHub Pages 版本預設沒有配對服務。連線程式已保留，經營者接上相容服務後才能使用 QR。對戰、合體及動畫由 BIN 原生流程執行；BIN 與快照留在各自手機。</p>
+          <p>原生流程更新目標為每秒 64 次，與桌面預覽一致；實際速度取決於手機效能。開發模式分別顯示畫面 FPS 與 SIM 更新率，尚未按實機校準。遊戲 RTC 仍按真實秒數推進。</p>
+          <p>Menu、離開網頁與鎖定螢幕會待機。超代彩改版回來後點螢幕，以原生邏輯補算離開時間；時間較長可能需要等待，結算期間可點螢幕先待機。若離開時仍在操作選單，先完成操作回主畫面再結算；遇到未支援流程會保留剩餘時間。原版 TEST4 與 DMC 目前在待機、關閉期間暫停養成。網頁關閉時不會在背景持續執行。</p>
+          <p>首次啟動需要網路下載 Python / WebAssembly 核心。這一版尚未提供離線啟動；可加入主畫面方便開啟。</p>
+          <p>橫向採 3:2 寬景：用原背景鏡像延伸兩側，角色與圖示維持比例。補景不增加遊戲判定範圍；選單仍以中央原畫面顯示。</p>
+          <p id="technical">等待核心啟動。</p>
+        </details>
+
+        <details id="about-licenses" class="panel details-panel about-panel">
+          <summary>關於與授權<span aria-hidden="true">＋</span></summary>
+          <div class="about-content">
+            <h2>PenC Pocket</h2>
+            <p>在瀏覽器裡照顧你的口袋怪獸。這是非官方模擬器試作，與 Bandai、Digimon 或 MAME 官方無隸屬關係。</p>
+            <h3>核心來源</h3>
+            <p>CPU 模擬部分依 <a href="https://github.com/mamedev/mame/tree/mame0289/src/devices/cpu/unsp" target="_blank" rel="noopener noreferrer">MAME 0.289 的 unSP 核心</a>改編，用於瀏覽器執行與機型適配。相關上游檔案採 GPL-2.0-or-later。</p>
+            <p class="about-authors">上游著作權人：Segher Boessenkool、Ryan Holtz、David Haywood。</p>
+            <a class="about-license-link" href="./licenses/MAME-GPL-2.0.txt" target="_blank" rel="noopener noreferrer">閱讀 MAME 核心授權全文 ↗</a>
+            <h3>第三方元件</h3>
+            <ul class="about-components">
+              <li><span><strong>Pyodide 0.27.7</strong><small>瀏覽器 Python 執行環境 · MPL-2.0</small></span><a href="https://github.com/pyodide/pyodide/blob/0.27.7/LICENSE" target="_blank" rel="noopener noreferrer" aria-label="閱讀 Pyodide 授權">授權 ↗</a></li>
+              <li><span><strong>qrcode-generator 2.0.4</strong><small>QR 碼產生 · MIT</small></span><a href="./vendor/qrcode-generator-LICENSE.txt" target="_blank" rel="noopener noreferrer" aria-label="閱讀 qrcode-generator 授權">授權 ↗</a></li>
+              <li><span><strong>jsQR 1.4.0</strong><small>QR 碼辨識 · Apache-2.0</small></span><a href="./vendor/jsqr-LICENSE.txt" target="_blank" rel="noopener noreferrer" aria-label="閱讀 jsQR 授權">授權 ↗</a></li>
+            </ul>
+            <p>本靜態版使用原生 HTML、CSS、JavaScript 與 Python。<a href="./licenses/THIRD-PARTY-NOTICES.txt" target="_blank" rel="noopener noreferrer">查看來源與授權聲明 ↗</a></p>
+            <h3>原始碼發布</h3>
+            <p>本模擬器整合版採 GPL-3.0-or-later；你可以依授權使用、修改、商用及再散布。第三方元件保留原授權。</p>
+            <a class="about-license-link" href="./licenses/GPL-3.0.txt" target="_blank" rel="noopener noreferrer">閱讀完整 GPL 授權 ↗</a>
+            <p><a href="./downloads/penc-pocket-source.zip" download>下載此版本完整原始碼與建置腳本</a> · <a href="https://github.com/zynxyzouo/penc-pocket" target="_blank" rel="noopener noreferrer">GitHub 專案 ↗</a></p>
+            <p>發布識別：<span id="release-id">__RELEASE_ID__</span> · 來源與修改說明隨原始碼提供。</p>
+            <h3>遊戲檔案與無擔保聲明</h3>
+            <p>本站不提供 BIN 或遊戲圖片、音樂下載；遊戲內容從你選取的本機 BIN 讀取。模擬器與第三方軟體依各自授權按現狀提供，不保證完整重現實體機。</p>
+          </div>
+        </details>
+<p class="menu-foot">部分流程試作 · 非完整實機模擬</p>
+</div></dialog>
+<dialog id="link-dialog" class="menu-dialog link-dialog" aria-labelledby="link-title">
+<header class="menu-header"><div><span class="eyebrow">PENC POCKET</span><h1 id="link-title">手機配對</h1></div><button id="link-close" aria-label="關閉配對畫面">×</button></header>
+<div class="menu-content">
+  <p class="link-intro">接通後，回到遊戲裡對戰與合體</p>
+  <p id="link-status" class="link-status" role="status">正在準備你的 QR 碼…</p>
+  <section id="link-entry" class="link-entry">
+    <button id="link-create" class="primary">產生 QR 碼／重試</button>
+  </section>
+  <section id="link-session" hidden>
+    <div class="link-qr-grid">
+      <div id="link-qr-wrap" class="link-qr-wrap"><canvas id="link-qr" aria-label="讓另一支手機掃描的連線 QR 碼"></canvas><div id="link-camera" hidden><video id="link-video" autoplay muted playsinline aria-label="掃描另一支手機的 QR 碼"></video></div></div>
+      <div id="link-scan-tools" class="link-scan-tools">
+        <button id="link-scan" class="primary">掃描對方 QR</button>
+        <label class="link-image-label" for="link-image">選擇 QR 圖片<input id="link-image" type="file" accept="image/*" class="visually-hidden"></label>
+        <p id="link-scan-status" class="save-note" role="status">兩邊都能掃描，任選一方即可。</p>
+        <details class="link-manual"><summary>改用代碼連線</summary><label for="link-code-input">對方的 8 碼代碼</label><input id="link-code-input" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="例如 AB23CD45"><button id="link-join">連線</button></details>
+      </div>
+    </div>
+    <canvas id="link-scan-canvas" hidden></canvas>
+    <div class="link-code-row"><div><small id="link-role">讓對方掃描，或掃描對方</small><strong id="link-code">--------</strong></div><button id="link-copy">複製連結</button></div>
+    <button id="link-return" class="primary" hidden>回到遊戲</button>
+    <p class="save-note">接通後自動回到遊戲。雙方選擇相同的 BATTLE／JOGRES 模式，再依畫面操作 ABC。不同 BIN 需通訊相容。</p>
+    <button id="link-disconnect" class="resume-button">中斷連線</button>
+  </section>
+</div></dialog>
+<dialog id="confirm-dialog" class="confirm-dialog"><form method="dialog"><p class="eyebrow">PENC POCKET</p><h2 id="confirm-title">確認操作</h2><p id="confirm-text"></p><div><button value="cancel">取消</button><button value="ok" class="primary">確認</button></div></form></dialog>
+<script type="module" src="./app.js"></script></body></html>
