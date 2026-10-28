@@ -1,5 +1,11 @@
 # Modifications — 2026-10-28
 
+- PenC execution caches decoded instructions and short straight-line blocks in
+  an additive accelerator. Strict fallback, instruction budgets, traces, PC
+  wrapping, peripheral hooks and snapshot ABI identities remain intact.
+  Catch-up sends progress between presentations (about 250 ms apart), always
+  presents its final/blocked state, and refreshes on cancellation without a
+  game tick. Native care events and elapsed-time accounting are unchanged.
 - Homepage startup now loads the last locally remembered BIN through the existing
   profile/hash and snapshot validation path. Gameplay remains paused until a tap;
   loading locks input and exposes recoverable errors without replacing bad saves.

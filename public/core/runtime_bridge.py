@@ -13,7 +13,7 @@ import math
 import time
 
 import bench as bench_module
-from cpu import CPU
+from cpu_accelerator import AcceleratedCPU as CPU
 import web_adapter as n
 import audio_bridge as audio
 import audio_completion
@@ -243,15 +243,26 @@ def _dispatch(request_json):
                          req.get('frames', 1), req.get('motion', False),
                          req.get('audio_elapsed_ms'), req.get('audio_speed', 1))
         return json.dumps(result, separators=(',', ':'))
+    if op=='present':
+        if n.bench is None:raise ValueError('No firmware loaded')
+        # Refresh after cancelling catch-up without advancing a native frame.
+        result=n.render(force=True)
+        result.update(motion_metadata())
+        result['native_link']=native_connector.cable.metadata(n.bench)
+        return json.dumps(result,separators=(',',':'))
     if op=='catch-up':
         if n.bench is None:raise ValueError('No firmware loaded')
+        present=req.get('present',True)
+        if type(present) is not bool:raise ValueError('Presentation flag must be boolean')
         due=continuity.metadata(n.bench)['pending_seconds']
         if native_connector.cable.connected:
             progress={'processed_seconds':0,'remaining_seconds':due,'blocked_reason':'連線中請先完成或中斷連線，再補算離開時間。'}
         else:
             progress=away_bridge.catch_up(n.bench,due,budget_ms=35)
             continuity.consume(n.bench,progress['processed_seconds'])
-        result=n.render()
+        # Progress packets need no image/clock projection. Always present the
+        # final committed state and any native boundary that prevents catch-up.
+        result=n.render() if present or progress['remaining_seconds']==0 or progress['blocked_reason'] else {}
         result['catch_up']=progress
         result.update(motion_metadata())
         result['native_link']=native_connector.cable.metadata(n.bench)
@@ -327,7 +338,7 @@ def dispatch(request_json):
         if result.get('format')==n.FORMAT:
             result['continuity']=continuity.snapshot(n.bench)
             result['sound_completion']=sound_state.snapshot(n.bench)
-        elif 'clock' in result:
+        elif 'clock' in result or 'catch_up' in result:
             result['native_boot']=native_boot.metadata(n.bench)
             result['native_settings']=native_settings.metadata(n.bench)
             result['continuity']=continuity.metadata(n.bench)
