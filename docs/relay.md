@@ -1,27 +1,16 @@
-# Optional native-link relay
+# Native link relay
 
-This release does not operate a relay. `configuredRelay = null` is intentional.
-GitHub Pages cannot execute a POST endpoint or store transient sessions.
-The previous host's identity headers and D1 database are not portable.
+GitHub Pages is static. The optional backend is a Cloudflare Workers Free and
+SQLite Durable Object service, with /api/link create,pair,exchange,leave.
+Current authoritative wire protocol: [cloudflare-contract.md](cloudflare-contract.md).
+Deployment steps and Free-plan boundary: [cloudflare-setup.md](cloudflare-setup.md).
 
-`public/native-link.js` defines the JSON client contract. POST requests contain
-`action`, an unguessable 32-byte hex session `token`, optional session `code`,
-and action-specific fields. Actions: create, pair, exchange, leave.
-Create/pair include `profile`; pair also includes peer's 8-character code.
-Exchange includes `received` and up to 16 outbound packets. Responses contain
-`code`, `slot`, `connected`, `closed`, `accepted` and `packets` as applicable.
-The emulator's `public/core/native_connector.py` validates sequence and payloads.
+The old private platform relay and unpublished WebRTC/TURN prototype are not
+runtime dependencies. Browser RelayTransport preserves native connector packet
+semantics. Pairing closes the QR overlay, then players choose BATTLE or JOGRES
+in their own game. Different BIN hashes are allowed when transport hashes match.
 
-A compatible service must authenticate session ownership, validate profile and
-packet shapes, ensure ordered/idempotent delivery, limit message/body/session
-sizes and request rates, expire abandoned sessions, support leave/closure, and
-return explicit errors (400/401/403/404/409 etc.). Never treat Origin as identity.
-For cross-origin hosting, support OPTIONS and an explicit allowed website origin
-with Content-Type application/json. The public client uses credentials: omit;
-it never forwards browser cookies or exposes an operator secret.
-
-The pairing code is an invitation, not a login credential. The random token is
-kept only in memory and never encoded in the QR URL. QR contains only the same
-site's app path and `#link=CODE`. A real deployment must be tested with two
-phones, including simultaneous pairing, retries and disconnect races.
-Do not enable the UI merely because an endpoint URL has been entered.
+No backend-calculated battle or fusion preview. No firmware/save uploads. Public
+QR invitation is not the private device authentication token. Quota exhaustion
+ends the connection with no paid fallback. Real-phone gameplay testing remains
+necessary even after desktop transport tests pass.

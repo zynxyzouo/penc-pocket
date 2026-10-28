@@ -25,7 +25,7 @@ def collect(root):
         if rel.is_absolute() or '..' in rel.parts or any(x in IGNORED_DIRS for x in rel.parts):
             raise ValueError('Unsafe release path: '+name)
         path=root.joinpath(*rel.parts)
-        if path.suffix.lower() in FORBIDDEN or path.name.startswith('.env'):
+        if path.suffix.lower() in FORBIDDEN or path.name.startswith(('.env','.dev.vars')) or '.wrangler' in rel.parts:
             raise ValueError('Forbidden release file: '+name)
         if any(parent.is_symlink() for parent in [path,*path.parents] if parent!=root.parent):
             raise ValueError('Symlink not allowed: '+name)
@@ -81,8 +81,10 @@ def build(root=ROOT):
     (out/'downloads').mkdir()
     archive=source_zip(files)
     (out/'downloads/penc-pocket-source.zip').write_bytes(archive)
+    relay=json.loads(re.search(r'^const configuredRelay = (.+?);',files['public/hosting.js'].decode(),re.M).group(1))
     manifest={'release_id':release,'source_zip_sha256':sha(archive),'source_files':inventory,
-              'runtime':'external unmodified Pyodide 0.27.7 CDN','relay_default':'disabled'}
+              'runtime':'external unmodified Pyodide 0.27.7 CDN','relay_default':'cloudflare-free-native-relay' if relay else 'disabled',
+              'relay_endpoint':relay}
     (out/'release-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8',newline='\n')
     print(json.dumps({'status':'PASS','release_id':release,'source_files':len(files),'source_zip_bytes':len(archive),'source_zip_sha256':sha(archive)}))
     return manifest

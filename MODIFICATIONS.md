@@ -12,8 +12,15 @@
   Older adapter admissions and stored-profile migration records are retained for
   existing local saves; no user BIN or saved state is deleted or converted to R23.
 - The original browser integration used a private authenticated relay.
-  Static hosting defaults to no relay, with a visible unavailable state and
-  no background pairing attempts. QR links preserve the hosting subpath.
+  Static hosting retains a null-endpoint unavailable state, with no background
+  pairing attempts. QR links preserve the hosting subpath.
+- Cloudflare Free deployment adds authenticated QR pairing and native packet
+  mailboxes in a SQLite Durable Object. Peer acknowledgements, bounded retries,
+  quotas, expiry and disconnect are explicit. Different firmware may pair with
+  matching native transport hashes. The unpublished TURN prototype is omitted;
+  there is no credential issuance or paid fallback. The verified Free endpoint
+  is enabled after live packet, browser and native gameplay tests on 2026-10-28.
+  No game core behavior changed. Physical iPhone-to-iPhone testing remains open.
 - Previously bundled profiles r19h3/r20h4 omitted only `r16h.art` and `r16h.base_path`, unused local
   build metadata. `public/profile-migrations.js` records the exact admitted
   hash transition. Only that transition is allowed before normal restore

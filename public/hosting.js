@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Static hosting adaptation, 2026-10-28. See LICENSE and MODIFICATIONS.md.
-// Operator configuration: full endpoint of a compatible native-link relay.
+// Operator configuration: full endpoint of this project's Cloudflare Free native packet Worker.
 // GitHub Pages itself cannot provide this API. Never put a secret here.
-const configuredRelay = null;
+const configuredRelay = "https://penc-pocket-pairing.penc-pocket-deploy-tools.workers.dev/api/link"; // Live verified 2026-10-28; Workers Free only.
 export const relayUnavailable = '此版本尚未設定配對服務；單機養成可以正常使用。';
 export function resolveRelayEndpoint(value,base=import.meta.url){
   if(value===null||value===undefined||value==='')return null;

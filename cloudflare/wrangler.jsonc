@@ -1,0 +1,17 @@
+{
+  "name": "penc-pocket-pairing",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-10-28",
+  "workers_dev": true,
+  "observability": {"enabled": false},
+  "durable_objects": {"bindings": [{"name": "PAIRING", "class_name": "PairingObject"}]},
+  "migrations": [{"tag": "v1", "new_sqlite_classes": ["PairingObject"]}],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://zynxyzouo.github.io",
+    "REQUESTS_PER_IP_MINUTE": "600",
+    "REQUESTS_GLOBAL_DAY": "8000",
+    "CREATE_PER_IP_HOUR": "10",
+    "CREATE_PER_IP_DAY": "20",
+    "CREATE_GLOBAL_DAY": "500"
+  }
+}

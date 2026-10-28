@@ -2,11 +2,13 @@
 // Public hosting adaptation, 2026-10-28. See MODIFICATIONS.md.
 import {drawPairQR,parsePairCode,pairUrl,QrScanner} from './link-qr.js';
 import {relayEndpoint,relayUnavailable} from './hosting.js';
+import {RelayTransport} from './relay-transport.js';
 const $=id=>document.getElementById(id);
 const token=()=>[...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,'0')).join('');
 export class LinkRoom {
- constructor({rpc,prepare,resume,display,onError=e=>this.message(e.message),renderQR=drawPairQR,scanner,endpoint=relayEndpoint}){
+ constructor({rpc,prepare,resume,display,onError=e=>this.message(e.message),renderQR=drawPairQR,scanner,endpoint=relayEndpoint,transport}){
   Object.assign(this,{rpc,prepare,resume,display,onError,renderQR,endpoint});
+  this.transport=transport||(endpoint?new RelayTransport({endpoint}):null);
   this.session=null;this.engine=false;this.generation=0;this.busy=false;this.autoResume=false;
   this.scanner=scanner||new QrScanner({video:$('link-video'),canvas:$('link-scan-canvas'),onCode:value=>{this.stopScanner();void this.pair(value);},onStatus:(text,active)=>{this.scanning=active;this.scanUI();$('link-scan-status').textContent=text;}});
   $('link-open').onclick=()=>this.open();$('link-create').onclick=()=>this.enter();$('link-join').onclick=()=>this.pair($('link-code-input').value);
@@ -16,9 +18,10 @@ export class LinkRoom {
   $('link-image').onchange=e=>{this.stopScanner();void this.scanner.image(e.target.files[0]);e.target.value='';};
   $('link-copy').onclick=async()=>{try{await navigator.clipboard.writeText(pairUrl(this.session.code));this.message('連線連結已複製。');}catch{this.message('請掃描 QR 碼，或手動輸入下方代碼。');}};
   document.addEventListener('visibilitychange',()=>{if(document.hidden)this.stopScanner();});
-  globalThis.addEventListener?.('pagehide',()=>this.stopScanner());
+  globalThis.addEventListener?.('pagehide',()=>{this.stopScanner();if(this.session)void this.end().catch(()=>{});});
  }
  message(text){$('link-status').textContent=text;}
+ stopNotice(text){this.message(text);$('menu-dialog').close();if(!$('link-dialog').open)$('link-dialog').showModal();}
  scanUI(){$('link-camera').hidden=!this.scanning;$('link-qr').hidden=!!this.scanning;$('link-scan').textContent=this.scanning?'停止掃描':'掃描對方 QR';}
  stopScanner(){this.scanner.stop();this.scanning=false;this.scanUI();}
  show(){
@@ -56,9 +59,7 @@ export class LinkRoom {
  returnToGame(){this.stopScanner();this.autoResume=false;$('link-dialog').close();$('menu-dialog').close();this.resume();}
  async request(action,fields={},session=this.session){
   if(!this.endpoint)throw Error(relayUnavailable);
-  const response=await fetch(this.endpoint,{method:'POST',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,token:session.token,code:session.code,...fields}),signal:AbortSignal.timeout(10000)});
-  let value;try{value=await response.json();}catch{throw Error('配對服務回應不正確，請確認服務設定。');}
-  if(!response.ok)throw Object.assign(Error(value.error||'連線暫時中斷'),{status:response.status});return value;
+  return this.transport.request(action,fields,session);
  }
  async enter(){if(!this.endpoint){this.message(relayUnavailable);return;}if(this.busy||this.ending||this.cleanupNeeded)return;this.session||={token:token(),code:null};await this.exchange();}
  async pair(value){
@@ -80,7 +81,7 @@ export class LinkRoom {
    const s=await this.request(action,fields,session);
    if(generation!==this.generation){if(s.code&&['create','pair'].includes(action)){try{await this.request('leave',{}, {...session,code:s.code});}catch{}}return;}
    session.code=s.code;session.slot=s.slot;
-   if(s.closed){await this.end(false);this.message('對方已離線，請重新配對。');return;}
+   if(s.closed){await this.end(false);this.stopNotice('對方已離線或連線已逾時，請重新配對。');return;}
    if(s.connected&&!this.engine){
     session.peer=null;this.connecting=true;let r;try{r=await this.rpc('native-link-connect',{session:session.code,slot:s.slot});}finally{this.connecting=false;}
     if(generation!==this.generation)return;this.engine=true;this.display(r);this.stopScanner();this.message('已接通，請在遊戲裡選擇 BATTLE 或 JOGRES。');
@@ -91,16 +92,18 @@ export class LinkRoom {
    this.failures=0;this.show();
   }catch(e){
    if(generation!==this.generation)return;
-   if(action==='pair'&&[400,404,409].includes(e.status)){session.peer=null;this.message(e.message+' 請重新掃描。');this.failures=0;}
-   else{this.failures=(this.failures||0)+1;this.message(e.message+'；正在重試連線。');if([401,403,404,409].includes(e.status)||this.failures>=8){await this.end(true);this.message(e.message+'，請重新配對。');}}
+   this.failures=(this.failures||0)+1;
+   if(e.terminal||e.retryable!==true||this.failures>=3){await this.end(true);this.stopNotice(e.message+' 連線已停止；需要再次連線時，請重新開啟配對。');}
+   else this.message(e.message+'；正在重試連線。');
   }finally{
-   if(generation===this.generation){this.busy=false;this.show();if(this.session)this.timer=setTimeout(()=>this.exchange(),this.session.peer&&!this.failures?0:Math.min(3000,350*(this.failures||1)));}
+   if(generation===this.generation){this.busy=false;this.show();if(this.session)this.timer=setTimeout(()=>this.exchange(),Math.min(3000,350*(this.failures||1)));}
   }
  }
  update(meta){if(this.engine&&meta&&!meta.connected&&!this.ending)void this.end(true).catch(()=>{});}
  end(notify=true){
   if(this.endPromise)return this.endPromise;this.ending=true;this.queuedPeer=null;this.stopScanner();
-  const session=this.session,needsDisconnect=this.engine||this.connecting||this.cleanupNeeded;this.generation++;clearTimeout(this.timer);this.engine=false;this.busy=false;this.autoResume=false;this.show();
+  const session=this.session,needsDisconnect=this.engine||this.connecting||this.cleanupNeeded;this.generation++;clearTimeout(this.timer);this.engine=false;this.busy=false;this.autoResume=false;this.failures=0;this.show();
+  this.transport?.close();
   this.endPromise=(async()=>{
    try{
     if(needsDisconnect){const r=await this.rpc('native-link-disconnect');this.display(r);}

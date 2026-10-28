@@ -23,18 +23,21 @@ BIN 與存檔存在這個網站自己的瀏覽器儲存區，不會自動從舊�
 
 ## QR 對戰與合體
 
-**本次 GitHub Pages 部署預設不提供網路配對。** Pages 只能託管靜態
-檔案，無法執行原有的配對伺服器及資料庫。單機功能可用；配對按鈕會
-顯示尚未設定服務。原生連線模擬與 QR 客戶端原始碼仍隨本專案提供。
+這版使用 **Cloudflare Workers Free + SQLite Durable Objects** 轉送
+遊戲原生封包，不使用付費 TURN。兩人開啟同一網站的連線選單，任一方
+掃描對方 QR；配對完成後回到 BIN 內 BATTLE／JOGRES，依遊戲流程操作。
+連線狀態可點擊中斷；關閉頁面或額滿會結束連線。
+不同 BIN 只要原生通訊相容就能配對。伺服器不替遊戲計算對戰或合體。
+機型能開機不代表原生連線已支援；TEST4／DMC 尚未完成連線驗證。
 
-經營者可在 `public/hosting.js` 的 `configuredRelay` 設定相容的 HTTPS
-API，再重建。這不是任意訊號伺服器 URL：需要實作 native-link 封包
-協定、CORS、權杖驗證、封包順序、斷線、逾時、濫用限制；參閱
-`docs/relay.md`。原本私人網站依賴平台驗證，不能直接當跨站服務。
-兩個裝置須使用相同網站與 relay。不得把憑證或私人金鑰寫進前端。
-
-WebRTC 直連與 TURN 備援的具體提案見 [docs/webrtc-turn.md](docs/webrtc-turn.md)。
-此提案尚未實作或部署，不會因新增文件而啟用連線按鈕。
+部署與免費方案限制見 [docs/cloudflare-setup.md](docs/cloudflare-setup.md)，
+協定見 [docs/cloudflare-contract.md](docs/cloudflare-contract.md)。
+2026-10-28 正式服務通過封包、瀏覽器跨站連線、原生混版對戰及合體
+測試；兩支實體 iPhone 互連仍待實測。預設每日 8,000 次 API 請求，測試者
+共用；350 ms 輪詢下最多約 23 分鐘雙人連線時間，滿額停止。
+台灣時間每天 08:00 重置。此程式不會自動升級付費；帳號須維持 Workers
+Free。單機養成不使用連線額度。經營者可在 `public/hosting.js` 更換已驗證
+的相容 HTTPS API 再重建，或設為 `null` 關閉網路配對。
 
 ## 本機修改與重建
 
