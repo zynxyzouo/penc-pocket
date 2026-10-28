@@ -1,0 +1,14 @@
+{
+  "family": "dmc",
+  "adapter": "dmc-linedog-v41",
+  "name": "DMC 線條小狗 v4.1",
+  "sha256": "3457140c5f07211abdd756462693c67c824c4c45c26a7ca91e4323df476701dc",
+  "entries": {
+    "input_home": "2005f3",
+    "input_scan": "200c1a",
+    "timers": "20923c",
+    "native_scanout": "2078ef"
+  },
+  "boot": "native-embedded-save",
+  "screen": {"width": 96, "height": 96}
+}

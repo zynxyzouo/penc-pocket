@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "profiles": {
+    "3457140c5f07211abdd756462693c67c824c4c45c26a7ca91e4323df476701dc": {
+      "name": "DMC 線條小狗 v4.1",
+      "file": "dmc-linedog-v41.json",
+      "profile_sha256": "06b62009466c553b63ccf7e0029f4ff170e6317833779d1429be97ef9fdaefc5",
+      "profile_bytes": 375
+    },
+    "a21e573ba40741603b8b4068817c789c625196ab5e53ddb188b1f57c63c612a1": {
+      "file": "penc-stock-test4.json",
+      "name": "PenC 原版超代彩 TEST4 · Metal Empire",
+      "profile_sha256": "53c661916af4415efe3611f621c7502fbca8b0fad8ec8b9c0fa47e472c61bb11",
+      "profile_bytes": 403
+    },
+    "0c7953432d89c924221ee8b30054a25fd7c954ec35565b32bd499a5ac2daf882": {
+      "name": "PenC R23 EXPERIMENTAL",
+      "file": "r23.json",
+      "profile_sha256": "05dcedc7a752bcca9e931252c0e1fefec81eb1798efddbda8f28f016ff969431",
+      "profile_bytes": 14129
+    }
+  }
+}
