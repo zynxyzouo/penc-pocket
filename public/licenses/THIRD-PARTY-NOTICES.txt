@@ -1,0 +1,51 @@
+PenC Pocket - Third-party sources and notices
+Public release notices updated: 2026-10-28
+
+The first-party emulator integration is GPL-3.0-or-later; see the root LICENSE
+and the deployed licenses/GPL-3.0.txt. Vendor rights and notices retain their
+original scope. Firmware, game artwork/music and user saves are not supplied
+or licensed by this release. Software is supplied without warranty.
+
+MAME 0.289 unSP adapted implementation
+Source: https://github.com/mamedev/mame/tree/mame0289/src/devices/cpu/unsp
+Upstream license: GPL-2.0-or-later
+Copyright holders: Segher Boessenkool, Ryan Holtz, David Haywood
+Copyright 2008-2017 Segher Boessenkool
+Full upstream license: MAME-GPL-2.0.txt (beside this file)
+Selected CPU instructions were adapted into Python with browser host/peripheral
+integration. File-local notices identify the changes and date. The public
+integration uses the upstream or-later option to distribute under GPLv3 or later.
+No upstream endorsement or trademark permission is implied.
+
+qrcode-generator 2.0.4 - MIT
+Copyright (c) 2009 Kazuhiko Arase
+Source: https://github.com/kazuhikoarase/qrcode-generator/tree/83b7e8fe3fddd3b0368dbafd6ce56995bd25e3c8
+Full license: ../vendor/qrcode-generator-LICENSE.txt
+Preferred readable JavaScript is included in the browser source.
+
+jsQR 1.4.0 - Apache-2.0
+Source: https://github.com/cozmo/jsQR/tree/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3
+Full license: ../vendor/jsqr-LICENSE.txt
+Modified 2026-10-28: wrapped upstream UMD output with module.exports and an ES
+module default export. QR decoding logic is unchanged. The matching preferred
+TypeScript sources and original build configuration are in the source download
+under third_party/jsqr-1.4.0/. See third_party/SOURCE-MANIFEST.json for hashes.
+
+Pyodide 0.27.7 - external, unmodified CDN runtime, MPL-2.0
+CDN: https://cdn.jsdelivr.net/pyodide/v0.27.7/full/
+Source/build inputs: https://github.com/pyodide/pyodide/tree/0.27.7
+Full license: PYODIDE-MPL-2.0.txt
+Runtime binaries are downloaded directly from the upstream CDN and are not
+included in this repository or source archive. The upstream tagged source is
+available at the URL above. It includes separate components with their own terms:
+CPython 3.12.7: https://github.com/python/cpython/tree/v3.12.7
+  Full notice: CPYTHON-LICENSE.txt
+Emscripten 3.1.58: https://github.com/emscripten-core/emscripten/tree/3.1.58
+  Full notice: EMSCRIPTEN-LICENSE.txt
+This is not a complete SBOM of the external runtime; MPL does not replace the
+separate component licenses. Self-hosting its binaries needs a separate inventory.
+
+Matching application source and build scripts:
+../downloads/penc-pocket-source.zip (from the deployed website)
+The archive includes LICENSE, MODIFICATIONS.md, source and packaging tools.
+The release-manifest.json at the website root identifies its byte hashes.
