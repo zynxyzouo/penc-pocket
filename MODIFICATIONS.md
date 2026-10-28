@@ -1,11 +1,22 @@
-# Modifications — 2026-10-28
+# Modifications — 2026-10-29
+
+- R23 adds an explicit offline custody policy: feed, clean and bedtime lights
+  protect against new unattended care mistakes without erasing past history.
+  Native code owns sleep, growth, evolution routes and normal stage resets.
+  Hash-gated event settlement skips only strictly interior countdown intervals;
+  boundaries and evolution commits remain native. Existing injury, illness,
+  death, unhatched pets and unsupported active flows stop without losing debt.
+  Snapshots persist the policy and a committed watermark; processing time does
+  not create further catch-up debt. The legacy native-care mode remains selectable.
+  This is a host policy, not original-hardware offline behavior. No BIN changed.
 
 - PenC execution caches decoded instructions and short straight-line blocks in
   an additive accelerator. Strict fallback, instruction budgets, traces, PC
   wrapping, peripheral hooks and snapshot ABI identities remain intact.
   Catch-up sends progress between presentations (about 250 ms apart), always
   presents its final/blocked state, and refreshes on cancellation without a
-  game tick. Native care events and elapsed-time accounting are unchanged.
+  game tick. This earlier acceleration leaves native care behavior unchanged;
+  the later custody policy above is a separate selectable behavior.
 - Homepage startup now loads the last locally remembered BIN through the existing
   profile/hash and snapshot validation path. Gameplay remains paused until a tap;
   loading locks input and exposes recoverable errors without replacing bad saves.

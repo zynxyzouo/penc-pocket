@@ -24,6 +24,7 @@ let lastSave=0,savePromise=null,persistence=Promise.resolve(),generation=0,saveB
 let profileName='',motionReady=false,motionPending=false,linkRoom;
 let machineFamily='penc',machineCapabilities={};
 let catching=false,awayAutoRetry=true,autoLoading=false;
+let offlineAvailable=false,offlineMode='native',offlineChanging=false;
 new DisplayOrientation({root:document.body,icon:$('orientation-toggle'),menu:$('orientation-menu'),label:$('orientation-status'),onChange:g=>pixelView.setLandscape(g.landscape),onToggle:()=>{clearKeys();if(loaded&&worker)rpc('release').catch(fail);}});
 const pacer=new FramePacer(64);
 const soundTimeline=new SoundTimeline();
@@ -35,21 +36,22 @@ window.addEventListener('hashchange',()=>{if(loaded&&!fatal&&machineCapabilities
 function status(text,error=false){$('status').textContent=text;$('status').parentElement.classList.toggle('error',error);document.body.classList.toggle('has-error',error);$('menu-open').title=error?text:'開啟 Menu';}
 function controls(){
   if(autoLoading)$('bin-file').disabled=true;
-  for(const e of [...buttons,$('step')])e.disabled=autoLoading||!loaded||fatal||catching;
-  $('play').disabled=autoLoading||!loaded||fatal;
+  for(const e of [...buttons,$('step')])e.disabled=autoLoading||!loaded||fatal||catching||offlineChanging;
+  $('play').disabled=autoLoading||!loaded||fatal||offlineChanging;
   for(const e of [$('save'),$('export'),$('import'),$('reset'),$('restore-game')])e.disabled=autoLoading||!loaded;
   $('remember').disabled=autoLoading||loaded&&saveBlocked;
   $('link-open').disabled=autoLoading||!relayAvailable||!loaded||fatal||machineCapabilities.link===false;
   $('reset').disabled=autoLoading||!loaded||machineCapabilities.new_game===false;
   $('sound-enable').disabled=machineCapabilities.audio===false;
   $('motion-enable').disabled=machineCapabilities.motion===false;
+  $('offline-mode').disabled=autoLoading||!loaded||fatal||!offlineAvailable||catching||offlineChanging;
   if(machineCapabilities.audio===false)$('sound-preview').disabled=true;
   $('play').textContent=catching?'Ⅱ 暫停結算':running?'Ⅱ 待機':'▶ 開始';
   $('live-state').textContent=fatal?'流程已停止':loaded?(catching?'補算離開時間':running?'執行中':'待機中'):'等待載入';
   $('clock-status').textContent=loaded?(running?'GAME TIME':'PAUSED'):'GAME TIME';
   deviceUI.setRunning(loaded,running,fatal);
   $('screen-action').hidden=running;
-  $('screen-action').disabled=autoLoading;
+  $('screen-action').disabled=autoLoading||offlineChanging;
   $('screen-action').textContent=autoLoading?'正在載入上次的 BIN…':fatal?'開啟 Menu 查看狀態':catching?'正在補算…點一下待機':loaded?'▶ 繼續':'＋ 載入 BIN';
 }
 function openMenu(){if(!$('menu-dialog').open){pause();if(loaded&&!fatal)status(machineCapabilities.away===false?'已待機，此機型目前在關閉期間暫停養成。':'已待機。回來按繼續，會補算離開時間。');$('menu-dialog').showModal();}}
@@ -66,6 +68,8 @@ async function ensureCore(){
   return booting;
 }
 function display(r,activeFrame=false){
+  if(r.offline_policy){offlineAvailable=!!r.offline_policy.available;offlineMode=r.offline_policy.mode;$('offline-mode').value=offlineMode;}
+  else if(r.family&&r.family!=='penc'){offlineAvailable=false;offlineMode='native';$('offline-mode').value='native';}
   if(r.family){machineFamily=r.family;machineCapabilities=r.capabilities||{};controls();$('family-status').textContent=r.family==='dmc'?'DMC 彩機・線條小狗 v4.1。已接上原生畫面、ABC 與本機快照；聲音、連線、離開補算仍待移植。':r.family==='penc-stock'?'原版超代彩 TEST4・原生開機、畫面、ABC、音效、晃動與本機快照；網路連線及離開補算尚未接上。':'PenC 超代彩・原生畫面、ABC、聲音、晃動、連線與離開補算。';}
   linkRoom?.update(r.native_link);
   sound.setNativeSettings(r.native_settings);
@@ -73,7 +77,7 @@ function display(r,activeFrame=false){
   const light=setting?.supported&&setting.brightness_valid?[.45,.6,.75,.9,1][setting.brightness_level-1]:1;
   $('screen').style.filter=`brightness(${light})`;$('clock-screen').style.filter=`brightness(${light})`;
   if(setting)$('native-settings-status').textContent=setting.supported===false?'此機型的網頁音量／亮度輸出尚未接上。':`遊戲音量：${setting.volume_valid?['靜音','小','大'][setting.volume_level]:'尚未設定'} · 亮度：${setting.brightness_valid?setting.brightness_level+' / 5':'尚未設定'}${setting.brightness_preview?'（預覽）':''}`;
-  if(r.continuity){$('away-status').textContent=r.continuity.supported===false?'此機型目前在網頁開啟時走時；待機與關閉期間暫停養成。':r.continuity.clock_rollback?'裝置時間往回變動，保留原時間基準。':r.continuity.pending_seconds>1?`尚待補算 ${formatDuration(r.continuity.pending_seconds)}。回主畫面後繼續結算。`:r.continuity.started?'離開後持續計時，回來時補算養成。':'完成設定與孵化後，開始記錄離開時間。';}
+  if(r.continuity){$('away-status').textContent=r.continuity.supported===false?'此機型目前在網頁開啟時走時；待機與關閉期間暫停養成。':r.continuity.clock_rollback?'裝置時間往回變動，保留原時間基準。':r.continuity.pending_seconds>1?`尚待${offlineMode==='custody'?'託管結算':'補算'} ${formatDuration(r.continuity.pending_seconds)}。回主畫面後繼續。`:r.continuity.started?(offlineMode==='custody'?'離線託管：成長繼續，不新增未照顧失誤；回來按事件結算。':'原機補算：離開期間仍會產生未照顧的後果。'):'完成設定與孵化後，開始記錄離開時間。';}
   if(activeFrame&&running)sound.play(r.sound_events);
   pixelView.update(r);
   motionReady=!!r.motion_ready;phoneMotion.setSupported(r.motion_supported);
@@ -105,8 +109,14 @@ function pause(save=true){
 function fail(e){pause(false);fatal=true;controls();status('遇到尚未支援的流程，已停止。可匯出快照或重設測試。 '+String(e.message).trim().split('\n').at(-1).slice(0,190),true);}
 function activateInputsFromGesture(){if(machineCapabilities.audio!==false)void sound.activateFromGesture();if(machineCapabilities.motion!==false)void phoneMotion.activateFromGesture();}
 function formatDuration(seconds){return seconds<60?seconds+' 秒':seconds<3600?Math.floor(seconds/60)+' 分 '+seconds%60+' 秒':Math.floor(seconds/3600)+' 小時 '+Math.floor(seconds%3600/60)+' 分';}
+function awayBlockedMessage(reason){
+  if(reason.includes('preexisting-illness-or-injury'))return '怪獸已有生病或受傷，請先在遊戲內治療。剩餘離線時間已保留。';
+  if(reason.includes('preexisting-death-or-terminal'))return '怪獸已進入死亡或生命終點流程，託管已停止。剩餘離線時間已保留。';
+  if(reason.includes('unhatched-pet'))return '請先完成孵化，再回主畫面繼續託管結算。剩餘離線時間已保留。';
+  return '離開時間已保留，請先完成遊戲內操作並回主畫面，再點繼續結算。';
+}
 async function start({fromGesture=false}={}){
-  if(autoLoading||!loaded||fatal||document.hidden)return;
+  if(autoLoading||offlineChanging||!loaded||fatal||document.hidden)return;
   if(fromGesture)activateInputsFromGesture();else sound.resume();
   if(catching||running)return;
   $('menu-dialog').close();catching=true;const token=++playGeneration,g=generation;controls();
@@ -119,15 +129,16 @@ async function start({fromGesture=false}={}){
       const remaining=r.continuity?.pending_seconds||0;
       blocked=r.catch_up?.blocked_reason||'';
       if(blocked||remaining===0)break;
-      const text='正在補算離開時間，尚餘 '+formatDuration(remaining)+'；點螢幕可先待機。';
-      status(text);$('screen-action').textContent='補算中 · 尚餘 '+formatDuration(remaining)+' · 點此待機';
+      const label=r.catch_up?.mode==='custody'?'託管結算':'補算';
+      const text='正在'+label+'離開時間，尚餘 '+formatDuration(remaining)+'；點螢幕可先待機。';
+      status(text);$('screen-action').textContent=label+' · 尚餘 '+formatDuration(remaining)+' · 點此待機';
       if(Date.now()-lastSave>5000)await saveNow(false);
       await new Promise(resolve=>setTimeout(resolve,0));
       if(token!==playGeneration||g!==generation||document.hidden)return;
     }
     if(token!==playGeneration||g!==generation)return;
     catching=false;running=true;awayAutoRetry=!blocked;lastClock=performance.now();soundTimeline.reset(lastClock);pacer.reset(lastClock);fraction=0;motionPending=false;phoneMotion.reset();controls();
-    status(blocked?'離開時間已保留，這個流程暫時無法補算；完成操作回主畫面後可再試。':machineFamily==='dmc'?'彩機執行中。A 選擇、B 確認、C 返回；開機選 CONTINUE 保留 BIN 原有進度。':'執行中。A 選擇、B 確認、C 返回；主畫面長按 C 開啟遊戲設定。');
+    status(blocked?awayBlockedMessage(blocked):machineFamily==='dmc'?'彩機執行中。A 選擇、B 確認、C 返回；開機選 CONTINUE 保留 BIN 原有進度。':'執行中。A 選擇、B 確認、C 返回；主畫面長按 C 開啟遊戲設定。');
     await saveNow(false);if(token===playGeneration&&g===generation&&running)schedule(0);
   }catch(e){if(token===playGeneration&&g===generation){catching=false;fail(e);}}
 }
@@ -162,7 +173,7 @@ async function pump(){
   finally{inFrame=false;if(g===generation&&!fatal&&(running||events.length))schedule(events.length?0:pacer.delay(performance.now()));}
 }
 function keyEvent(){
-  if(autoLoading||!loaded||fatal||catching)return;awayAutoRetry=true;held=new Set([...keyboard,...pointers.values()]);buttons.forEach(b=>b.classList.toggle('pressed',held.has(b.dataset.key)));
+  if(autoLoading||offlineChanging||!loaded||fatal||catching)return;awayAutoRetry=true;held=new Set([...keyboard,...pointers.values()]);buttons.forEach(b=>b.classList.toggle('pressed',held.has(b.dataset.key)));
   deviceUI.setKeys(held);
   events.push({keys:[...held]});if(events.length>32){pause();status('輸入過於密集，已放開按鍵並暫停。');return;}
   const token=++keyGeneration,keys=[...held];clearTimeout(longTimer);
@@ -253,6 +264,12 @@ $('reset').onclick=async()=>{await pause();if(!await confirmAction('從蛋開始
 }catch(e){fail(e);}};
 $('restore-game').onclick=async()=>{await pause();try{const backup=await read('before-new-game:'+hash);if(!backup)throw new Error('沒有新遊戲前的備份。');if(!await confirmAction('還原新遊戲前的進度？','目前進度也會保存在匯入前備份。'))return;await linkRoom.end();await writeMany([['before-import:'+hash,await rpc('snapshot')]]);display(await rpc('restore',{snapshot:backup}));fatal=false;saveBlocked=false;controls();await saveNow(false);status('已還原新遊戲前進度，按開始繼續。');}catch(e){status(e.message,true);}};
 $('remember').onchange=async()=>{if(!loaded)return;try{if($('remember').checked)await writeMany([['bin:'+hash,{buffer:binBuffer,name:fileName,profileText,profileName}]]);else await erase(['bin:'+hash]);status($('remember').checked?'已在這台裝置記住 BIN 與設定。':'已移除瀏覽器保存的 BIN；設定與快照仍保留，下次需重新選取相同 BIN。');}catch(e){storageError(e);}};
+$('offline-mode').onchange=async()=>{
+  const mode=$('offline-mode').value,g=generation;offlineChanging=true;controls();
+  try{await pause();if(g!==generation)return;const r=await rpc('offline-policy',{mode});if(g!==generation)return;display(r);await saveNow(false);
+    status(mode==='custody'?'已啟用離線託管，套用於尚未結算的時間；已發生的失誤保留。':'已改用原機補算；離開期間仍會累積未照顧的後果。');
+  }catch(e){if(g===generation){$('offline-mode').value=offlineMode;status('未能切換離線方式：'+e.message,true);}}finally{offlineChanging=false;controls();}
+};
 $('resume').onclick=async()=>{$('resume').disabled=true;try{const last=await read('last'),record=last&&await read('bin:'+last.hash);if(!record)throw new Error('請重新選取相同的 BIN，原有快照會自動讀取。');await loadFile(record.buffer,record.name,record.profileText?{text:record.profileText,name:record.profileName||'已保存設定'}:null);}catch(e){status(e.message,true);}finally{$('resume').disabled=false;}};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&loaded){pause();status(machineCapabilities.away===false?'進度已保存；關閉期間暫停養成。':'已保存待機；回來按「開始」，補算離開時間。');}});
 window.addEventListener('pagehide',()=>pause());
