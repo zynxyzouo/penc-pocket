@@ -10,3 +10,5 @@
 *.asm
 *.pem
 *.key
+**/.wrangler/
+**/.dev.vars*
