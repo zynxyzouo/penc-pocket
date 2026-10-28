@@ -23,7 +23,7 @@ let held=new Set(),keyboard=new Set(),pointers=new Map(),events=[],longTimer,key
 let lastSave=0,savePromise=null,persistence=Promise.resolve(),generation=0,saveBlocked=false;
 let profileName='',motionReady=false,motionPending=false,linkRoom;
 let machineFamily='penc',machineCapabilities={};
-let catching=false,awayAutoRetry=true;
+let catching=false,awayAutoRetry=true,autoLoading=false;
 new DisplayOrientation({root:document.body,icon:$('orientation-toggle'),menu:$('orientation-menu'),label:$('orientation-status'),onChange:g=>pixelView.setLandscape(g.landscape),onToggle:()=>{clearKeys();if(loaded&&worker)rpc('release').catch(fail);}});
 const pacer=new FramePacer(64);
 const soundTimeline=new SoundTimeline();
@@ -34,12 +34,13 @@ $('relay-status').textContent=relayAvailable?'已設定配對服務；兩邊使�
 window.addEventListener('hashchange',()=>{if(loaded&&!fatal&&machineCapabilities.link!==false)void linkRoom.followInvite();});
 function status(text,error=false){$('status').textContent=text;$('status').parentElement.classList.toggle('error',error);document.body.classList.toggle('has-error',error);$('menu-open').title=error?text:'開啟 Menu';}
 function controls(){
-  for(const e of [...buttons,$('step')])e.disabled=!loaded||fatal||catching;
-  $('play').disabled=!loaded||fatal;
-  for(const e of [$('save'),$('export'),$('import'),$('reset'),$('restore-game')])e.disabled=!loaded;
-  $('remember').disabled=loaded&&saveBlocked;
-  $('link-open').disabled=!relayAvailable||!loaded||fatal||machineCapabilities.link===false;
-  $('reset').disabled=!loaded||machineCapabilities.new_game===false;
+  if(autoLoading)$('bin-file').disabled=true;
+  for(const e of [...buttons,$('step')])e.disabled=autoLoading||!loaded||fatal||catching;
+  $('play').disabled=autoLoading||!loaded||fatal;
+  for(const e of [$('save'),$('export'),$('import'),$('reset'),$('restore-game')])e.disabled=autoLoading||!loaded;
+  $('remember').disabled=autoLoading||loaded&&saveBlocked;
+  $('link-open').disabled=autoLoading||!relayAvailable||!loaded||fatal||machineCapabilities.link===false;
+  $('reset').disabled=autoLoading||!loaded||machineCapabilities.new_game===false;
   $('sound-enable').disabled=machineCapabilities.audio===false;
   $('motion-enable').disabled=machineCapabilities.motion===false;
   if(machineCapabilities.audio===false)$('sound-preview').disabled=true;
@@ -48,7 +49,8 @@ function controls(){
   $('clock-status').textContent=loaded?(running?'GAME TIME':'PAUSED'):'GAME TIME';
   deviceUI.setRunning(loaded,running,fatal);
   $('screen-action').hidden=running;
-  $('screen-action').textContent=fatal?'開啟 Menu 查看狀態':catching?'正在補算…點一下待機':loaded?'▶ 繼續':'＋ 載入 BIN';
+  $('screen-action').disabled=autoLoading;
+  $('screen-action').textContent=autoLoading?'正在載入上次的 BIN…':fatal?'開啟 Menu 查看狀態':catching?'正在補算…點一下待機':loaded?'▶ 繼續':'＋ 載入 BIN';
 }
 function openMenu(){if(!$('menu-dialog').open){pause();if(loaded&&!fatal)status(machineCapabilities.away===false?'已待機，此機型目前在關閉期間暫停養成。':'已待機。回來按繼續，會補算離開時間。');$('menu-dialog').showModal();}}
 $('menu-open').onclick=openMenu;
@@ -91,6 +93,7 @@ function display(r,activeFrame=false){
 }
 function clearKeys(){held.clear();keyboard.clear();pointers.clear();events=[];clearTimeout(longTimer);keyGeneration++;buttons.forEach(b=>b.classList.remove('pressed'));deviceUI.setKeys([]);}
 function pause(save=true){
+  if(autoLoading)save=false; // Do not persist a partly restored startup frame.
   running=false;catching=false;playGeneration++;sound.stop();clearTimeout(timer);fraction=0;lastClock=0;motionPending=false;phoneMotion.reset();clearKeys();controls();
   if(loaded&&worker){const g=generation;return rpc('release').then(s=>{if(save&&g===generation)return persist(s);}).catch(storageError);}
   return Promise.resolve();
@@ -99,7 +102,7 @@ function fail(e){pause(false);fatal=true;controls();status('遇到尚未支援�
 function activateInputsFromGesture(){if(machineCapabilities.audio!==false)void sound.activateFromGesture();if(machineCapabilities.motion!==false)void phoneMotion.activateFromGesture();}
 function formatDuration(seconds){return seconds<60?seconds+' 秒':seconds<3600?Math.floor(seconds/60)+' 分 '+seconds%60+' 秒':Math.floor(seconds/3600)+' 小時 '+Math.floor(seconds%3600/60)+' 分';}
 async function start({fromGesture=false}={}){
-  if(!loaded||fatal||document.hidden)return;
+  if(autoLoading||!loaded||fatal||document.hidden)return;
   if(fromGesture)activateInputsFromGesture();else sound.resume();
   if(catching||running)return;
   $('menu-dialog').close();catching=true;const token=++playGeneration,g=generation;controls();
@@ -154,7 +157,7 @@ async function pump(){
   finally{inFrame=false;if(g===generation&&!fatal&&(running||events.length))schedule(events.length?0:pacer.delay(performance.now()));}
 }
 function keyEvent(){
-  if(!loaded||fatal||catching)return;awayAutoRetry=true;held=new Set([...keyboard,...pointers.values()]);buttons.forEach(b=>b.classList.toggle('pressed',held.has(b.dataset.key)));
+  if(autoLoading||!loaded||fatal||catching)return;awayAutoRetry=true;held=new Set([...keyboard,...pointers.values()]);buttons.forEach(b=>b.classList.toggle('pressed',held.has(b.dataset.key)));
   deviceUI.setKeys(held);
   events.push({keys:[...held]});if(events.length>32){pause();status('輸入過於密集，已放開按鍵並暫停。');return;}
   const token=++keyGeneration,keys=[...held];clearTimeout(longTimer);
@@ -224,7 +227,7 @@ buttons.forEach(b=>{
   b.addEventListener('contextmenu',e=>e.preventDefault());
   b.addEventListener('click',e=>{if(e.detail===0&&!b.disabled){activateInputsFromGesture();events.push({keys:[b.dataset.key]},{keys:[]});schedule(0);}});
 });
-window.addEventListener('keydown',e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||['INPUT','TEXTAREA'].includes(e.target.tagName)||$('confirm-dialog').open||$('menu-dialog').open||$('link-dialog').open)return;const k=e.key.toUpperCase();if(!['A','B','C'].includes(k)||!loaded||fatal)return;activateInputsFromGesture();e.preventDefault();keyboard.add(k);keyEvent();});
+window.addEventListener('keydown',e=>{if(autoLoading||e.repeat||e.ctrlKey||e.metaKey||e.altKey||['INPUT','TEXTAREA'].includes(e.target.tagName)||$('confirm-dialog').open||$('menu-dialog').open||$('link-dialog').open)return;const k=e.key.toUpperCase();if(!['A','B','C'].includes(k)||!loaded||fatal)return;activateInputsFromGesture();e.preventDefault();keyboard.add(k);keyEvent();});
 window.addEventListener('keyup',e=>{if(keyboard.delete(e.key.toUpperCase())){e.preventDefault();keyEvent();}});
 $('save').onclick=()=>saveNow().catch(storageError);
 $('export').onclick=async()=>{try{
@@ -250,4 +253,18 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&loaded){pa
 window.addEventListener('pagehide',()=>pause());
 window.addEventListener('blur',()=>{if(held.size){clearKeys();if(loaded)rpc('release').catch(()=>{});}});
 window.addEventListener('pageshow',()=>{if(loaded){running=false;controls();status('已暫停，按「開始」繼續。');}});
-read('last').then(async last=>{if(!last)return;const record=await read('bin:'+last.hash);if(record){$('resume').hidden=false;$('resume').textContent='繼續上次的 '+record.name+' →';}else $('file-info').textContent='找到本機快照，重新選取相同 BIN 即可恢復。';}).catch(()=>{$('storage-note').textContent='無法使用瀏覽器儲存區，請以匯出／匯入快照保存。';});
+// Reuse the normal validated restore path; the first tap still starts gameplay
+// and requests audio/motion access. Never fetch or distribute a firmware file.
+autoLoading=true;controls();$('bin-file').disabled=true;$('resume').disabled=true;
+read('last').then(async last=>{
+  if(!last)return;
+  const record=await read('bin:'+last.hash);
+  if(!record){$('file-info').textContent='找到本機快照，重新選取相同 BIN 即可恢復。';return;}
+  $('resume').hidden=false;$('resume').textContent='重試載入 '+record.name+' →';
+  status('正在從這台裝置載入上次的 BIN 與存檔…');
+  await loadFile(record.buffer,record.name,record.profileText?{text:record.profileText,name:record.profileName||'已保存設定'}:null);
+  if(fatal&&!$('menu-dialog').open)$('menu-dialog').showModal();
+}).catch(e=>{
+  status('自動載入未完成，請重試或重新選取相同 BIN。 '+String(e.message).trim().split('\n').at(-1),true);
+  if(!$('menu-dialog').open)$('menu-dialog').showModal();
+}).finally(()=>{autoLoading=false;$('bin-file').disabled=false;$('resume').disabled=false;controls();});
