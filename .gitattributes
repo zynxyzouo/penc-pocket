@@ -1,0 +1,8 @@
+* text=auto eol=lf
+# These files have byte-level provenance or snapshot identities.
+public/profiles/*.json -text
+public/vendor/** -text
+public/licenses/** -text
+third_party/** -text
+LICENSE -text
+*.zip binary
