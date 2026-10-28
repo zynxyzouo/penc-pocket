@@ -96,6 +96,12 @@
           <div class="section-label"><span>存檔與備份</span><span id="save-state">尚無快照</span></div>
           <p id="family-status" class="muted">依 BIN 自動選擇原版超代彩、超代彩改版或 DMC 方彩。</p>
           <p id="away-status" class="muted">離開補算是否支援，依載入的機型顯示。</p>
+            <label for="offline-mode">離線方式</label>
+            <select id="offline-mode" class="resume-button" disabled>
+              <option value="custody">離線託管（建議）</option>
+              <option value="native">原機補算（仍有照顧失誤）</option>
+            </select>
+            <p id="offline-mode-note" class="muted">R23 託管會代為餵食、清潔與關燈，成長繼續；不替你訓練或對戰。既有失誤不清除，進化時仍依原生規則重設。已生病或受傷時，先在遊戲內治療。</p>
           
           <p class="muted">執行中定期保存在瀏覽器。匯出一份到「檔案」，可備份或換裝置。</p>
           <div class="save-actions"><button id="save" disabled>立即保存</button><button id="export" disabled>匯出備份 ↗</button><button id="import" disabled>匯入快照</button></div>
@@ -108,7 +114,7 @@
           <p>可從原生開機畫面設定時間、選蛋與孵化；現有快照仍保留原進度。完整生命週期與實體機驗證尚未完成。手機晃動及聲音預設開啟，首次按開始時依瀏覽器要求授權。</p>
           <p>此 GitHub Pages 版本預設沒有配對服務。連線程式已保留，經營者接上相容服務後才能使用 QR。對戰、合體及動畫由 BIN 原生流程執行；BIN 與快照留在各自手機。</p>
           <p>原生流程更新目標為每秒 64 次，與桌面預覽一致；實際速度取決於手機效能。開發模式分別顯示畫面 FPS 與 SIM 更新率，尚未按實機校準。遊戲 RTC 仍按真實秒數推進。</p>
-          <p>Menu、離開網頁與鎖定螢幕會待機。超代彩改版回來後點螢幕，以原生邏輯補算離開時間；時間較長可能需要等待，結算期間可點螢幕先待機。若離開時仍在操作選單，先完成操作回主畫面再結算；遇到未支援流程會保留剩餘時間。原版 TEST4 與 DMC 目前在待機、關閉期間暫停養成。網頁關閉時不會在背景持續執行。</p>
+          <p>Menu、離開網頁與鎖定螢幕會待機。R23 預設離線託管，回來點螢幕會按事件結算：成長繼續，代為餵食、清潔與關燈。既有傷病請先治療；操作選單、尚未孵化或未支援流程會保留剩餘時間。可在上方改選「原機補算」，此模式會有未照顧的後果，離開越久可能等越久。結算期間可點螢幕暫停。原版 TEST4 與 DMC 目前在待機、關閉期間暫停養成；網頁關閉時不會在背景持續執行。</p>
           <p>首次啟動需要網路下載 Python / WebAssembly 核心。這一版尚未提供離線啟動；可加入主畫面方便開啟。</p>
           <p>橫向採 3:2 寬景：用原背景鏡像延伸兩側，角色與圖示維持比例。補景不增加遊戲判定範圍；選單仍以中央原畫面顯示。</p>
           <p id="technical">等待核心啟動。</p>
