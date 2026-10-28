@@ -63,7 +63,7 @@ class ReleaseTests(unittest.TestCase):
         for key in ['file_sha256','presentation_sha256','runtime_sha256','family_sha256']:
             for name,value in config[key].items():
                 self.assertEqual(hashlib.sha256((public/'core'/name).read_bytes()).hexdigest(),value);checked+=1
-        self.assertEqual(checked,25)
+        self.assertEqual(checked,26)
         catalog=json.loads((public/'profiles/catalog.json').read_text(encoding='utf-8'))
         self.assertEqual(len(catalog['profiles']),3)
         for firmware,entry in catalog['profiles'].items():
