@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "prepared_utc": "2026-10-28T09:50:42.437720+00:00",
+  "status": "PINNED_PRODUCTION_SOURCE_AND_LICENSES_PREPARED_NO_RUNTIME_BINARIES",
+  "packages": [
+    {
+      "name": "jsqr",
+      "version": "1.4.0",
+      "metadata_url": "https://registry.npmjs.org/jsqr/1.4.0",
+      "metadata_sha256": "ab92d075855e13f2143d68e3f4d2a262c31fbfe2cb5e96b0b81e224af9261949",
+      "git_commit": "49a9633931fb8030ac2fc9cecc121d6e5a19f9a3",
+      "npm_tarball_url": "https://registry.npmjs.org/jsqr/-/jsqr-1.4.0.tgz",
+      "npm_integrity": "sha512-dxLob7q65Xg2DvstYkRpkYtmKm2sPJ9oFhrhmudT1dZvNFFTlroai3AWSpLey/w5vMcLBXRgOJsbXpdN9HzU/A==",
+      "npm_tarball_sha256": "b5299b37917a1fe7a8cab9dd5cc6b8accf82663add80abe5bf7761a921cc6602",
+      "npm_integrity_verified": true,
+      "upstream_dist": {
+        "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/dist/jsQR.js",
+        "sha256": "bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859",
+        "bytes": 256885,
+        "npm_dist_byte_identical": true,
+        "reference_package_dist_byte_identical": true,
+        "reference_package_dist_sha256": "bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859"
+      },
+      "source_tree_url": "https://api.github.com/repos/cozmo/jsQR/git/trees/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3?recursive=1",
+      "source_tree_response_sha256": "6361cdf38854af1d738cc9d407f4b3972d97f78dab8675f482936cbb5d1275ea",
+      "source_files": [
+        "src/BitMatrix.ts",
+        "src/Point.ts",
+        "src/binarizer/index.ts",
+        "src/decoder/decodeData/BitStream.ts",
+        "src/decoder/decodeData/index.ts",
+        "src/decoder/decodeData/shiftJISTable.ts",
+        "src/decoder/decoder.ts",
+        "src/decoder/reedsolomon/GenericGF.ts",
+        "src/decoder/reedsolomon/GenericGFPoly.ts",
+        "src/decoder/reedsolomon/index.ts",
+        "src/decoder/version.ts",
+        "src/extractor/index.ts",
+        "src/index.ts",
+        "src/locator/index.ts"
+      ],
+      "upstream_lockfiles": [],
+      "lockfile_note": "No dependency lockfile exists at this upstream commit; none was invented.",
+      "rebuild_status": "NOT_RUN; source-to-upstream-dist identity is established by exact commit and npm package comparison, not an independent compiler build."
+    },
+    {
+      "name": "qrcode-generator",
+      "version": "2.0.4",
+      "metadata_url": "https://registry.npmjs.org/qrcode-generator/2.0.4",
+      "metadata_sha256": "57bc334458e43210fde1afcb26dec1a4403c0374d1918a7751d83d58a5800792",
+      "git_commit": "83b7e8fe3fddd3b0368dbafd6ce56995bd25e3c8",
+      "npm_tarball_url": "https://registry.npmjs.org/qrcode-generator/-/qrcode-generator-2.0.4.tgz",
+      "npm_integrity": "sha512-mZSiP6RnbHl4xL2Ap5HfkjLnmxfKcPWpWe/c+5XxCuetEenqmNFf1FH/ftXPCtFG5/TDobjsjz6sSNL0Sr8Z9g==",
+      "npm_tarball_sha256": "02e2e18a99a90b02dad940851f59b7c3c5fd1ab79cbdece8595cb06328878159",
+      "npm_integrity_verified": true,
+      "preferred_source": {
+        "path": "public/vendor/qrcode-generator-2.0.4.mjs",
+        "url": "https://raw.githubusercontent.com/kazuhikoarase/qrcode-generator/83b7e8fe3fddd3b0368dbafd6ce56995bd25e3c8/js/dist/qrcode.mjs",
+        "sha256": "ea91d7118a5395289170da848b7c6758b996163bfbccf312591ab65a4911b7c0",
+        "bytes": 51907,
+        "npm_dist_byte_identical": true,
+        "public_module_byte_identical": true
+      }
+    }
+  ],
+  "files": [
+    {
+      "path": "third_party/jsqr-1.4.0/src/BitMatrix.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/BitMatrix.ts",
+      "sha256": "9e2bd08843aad46f8a033179401139a8d3d443ec5aa85393613e2fe4d3988120",
+      "bytes": 918
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/Point.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/Point.ts",
+      "sha256": "147ed3d78a6d0d22b813489ec05429ba96d7cdd6ffb7c4b655edbd1875c97936",
+      "bytes": 53
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/binarizer/index.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/binarizer/index.ts",
+      "sha256": "c2e48b874c2b33c6c6f33a28a5a614942b79cb2d10fa8ca726ef08edc13cf2f6",
+      "bytes": 5041
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/decoder/decodeData/BitStream.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/decoder/decodeData/BitStream.ts",
+      "sha256": "d89c825b416232a2ec48d47e1cb5a276a65a0478d03e440adfddbb37b5aba367",
+      "bytes": 1616
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/decoder/decodeData/index.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/decoder/decodeData/index.ts",
+      "sha256": "97f352d025bc40b8ec8e3afcad2f6451b2c4dca43c216bf6af0b6a6d86bbf337",
+      "bytes": 6697
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/decoder/decodeData/shiftJISTable.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/decoder/decodeData/shiftJISTable.ts",
+      "sha256": "a64cf17f2497fd50694ef39da6ba9a2333285d00883d7bb81e465bb9ebefebb0",
+      "bytes": 126409
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/decoder/decoder.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/decoder/decoder.ts",
+      "sha256": "a6604972be8ab7653ee5e280ab1f51d8064bb6e9803331c0b98db8a7dffdeb88",
+      "bytes": 12464
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/decoder/reedsolomon/GenericGF.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/decoder/reedsolomon/GenericGF.ts",
+      "sha256": "e656ea39c507cbbe501abc352104e255c43ef9383b68767fb53153a1dba11a57",
+      "bytes": 2010
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/decoder/reedsolomon/GenericGFPoly.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/decoder/reedsolomon/GenericGFPoly.ts",
+      "sha256": "50e095f12862451ad115f5bcfeb4112b552b5c83db1fb721cf5b9c35a1763e21",
+      "bytes": 4400
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/decoder/reedsolomon/index.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/decoder/reedsolomon/index.ts",
+      "sha256": "aaf733b8baa27bcb001af1937e15e8995df4a72cddb0da4eb9c29ca26a653f02",
+      "bytes": 4303
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/decoder/version.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/decoder/version.ts",
+      "sha256": "edfae707e882ee393488253feb4687390660083a450f9fcbfb6c3d1345edadfd",
+      "bytes": 34190
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/extractor/index.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/extractor/index.ts",
+      "sha256": "aef4eb71992dbe9d450abd6042ad9d96e23a8b6a4a9032bf32d5c1fc2fe3df66",
+      "bytes": 3713
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/index.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/index.ts",
+      "sha256": "3c05855dbde6f6c2e0cfd0cfc30e1e3ab7924b3412c441b518acfd6a550c8638",
+      "bytes": 2861
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/src/locator/index.ts",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/src/locator/index.ts",
+      "sha256": "55ffc3d3487a897e5f23f5abc6e2bb334953d29ca930039e4e3b080b50a1fc05",
+      "bytes": 19808
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/package.json",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/package.json",
+      "sha256": "23850629144f70982bdefa89db822397fc14bc849d6ed18bf9ceeb72c0f2678f",
+      "bytes": 1524
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/tsconfig.json",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/tsconfig.json",
+      "sha256": "6e29cc701c21a6e0baf5e8573ffe42074ebb20c7afe57a4b6ffbfd3116439f6f",
+      "bytes": 234
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/webpack.config.js",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/webpack.config.js",
+      "sha256": "967b5b518384816dba9b20dba774d3343d4b554eeb83936632f6be3332b4c8ce",
+      "bytes": 384
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/tslint.json",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/tslint.json",
+      "sha256": "af92ebd7c55cef9755af2139340380a8382e119daa71564fd46d69de4bee43ae",
+      "bytes": 301
+    },
+    {
+      "path": "third_party/jsqr-1.4.0/LICENSE",
+      "url": "https://raw.githubusercontent.com/cozmo/jsQR/49a9633931fb8030ac2fc9cecc121d6e5a19f9a3/LICENSE",
+      "sha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+      "bytes": 11358
+    },
+    {
+      "path": "LICENSE",
+      "url": "https://www.gnu.org/licenses/gpl-3.0.txt",
+      "sha256": "3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986",
+      "bytes": 35149
+    },
+    {
+      "path": "public/licenses/PYODIDE-MPL-2.0.txt",
+      "url": "https://raw.githubusercontent.com/pyodide/pyodide/0.27.7/LICENSE",
+      "sha256": "1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5",
+      "bytes": 16725
+    },
+    {
+      "path": "public/licenses/CPYTHON-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/python/cpython/v3.12.7/LICENSE",
+      "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf",
+      "bytes": 13936
+    },
+    {
+      "path": "public/licenses/EMSCRIPTEN-LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/emscripten-core/emscripten/3.1.58/LICENSE",
+      "sha256": "620a78084fc7ca97c0b5dea9abf891f3ffcadfdbf305276f099c9c4e12fc1d86",
+      "bytes": 5093
+    },
+    {
+      "path": "third_party/qrcode-generator-2.0.4/LICENSE",
+      "url": "https://raw.githubusercontent.com/kazuhikoarase/qrcode-generator/83b7e8fe3fddd3b0368dbafd6ce56995bd25e3c8/LICENSE",
+      "sha256": "3a850fa5f08101db6f40676c2786e10bd2cd5fff7b12ffdf1e0c434d4e49d90c",
+      "bytes": 1071
+    }
+  ],
+  "exclusions": [
+    "tests",
+    "test-data",
+    "fixtures",
+    "images",
+    "firmware",
+    "node_modules",
+    "runtime binaries"
+  ],
+  "runtime_notice_scope": "Pyodide, CPython and Emscripten license texts are supplied as notices for the external CDN runtime. This is not a complete runtime SBOM."
+}
