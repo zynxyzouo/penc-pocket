@@ -17,6 +17,7 @@ FIRMWARE_SHA256=frozenset((
     '3cf1d684b408da7e6917eb198798eb1f25ef2e4cfed347074f988995591c7191',
     '188d650f63b8bf694b1b8f7904a23089f6308f9f9774c2f608c9fdf463d7d772',
     'aa7227c3f5cc5bfd459352ffc936269e1f61b8ab62d6e19f6564cf39f933d204',
+    '0c7953432d89c924221ee8b30054a25fd7c954ec35565b32bd499a5ac2daf882',  # R23; native adapter regions verified unchanged.
 ))
 _last_code=None
 _last_supported=False

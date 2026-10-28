@@ -15,13 +15,13 @@ from build import collect, source_zip
 class ReleaseTests(unittest.TestCase):
     def test_profile_bytes_survive_git_add(self):
         with tempfile.TemporaryDirectory(dir=ROOT) as folder:
-            root=Path(folder);target=root/'public/profiles/r18.json'
+            root=Path(folder);target=root/'public/profiles/r23.json'
             target.parent.mkdir(parents=True)
-            raw=(ROOT/'public/profiles/r18.json').read_bytes();target.write_bytes(raw)
+            raw=(ROOT/'public/profiles/r23.json').read_bytes();target.write_bytes(raw)
             (root/'.gitattributes').write_bytes((ROOT/'.gitattributes').read_bytes())
             subprocess.run(['git','init','-q'],cwd=root,check=True)
             subprocess.run(['git','-c','core.autocrlf=false','add','.'],cwd=root,check=True,capture_output=True)
-            staged=subprocess.check_output(['git','show',':public/profiles/r18.json'],cwd=root)
+            staged=subprocess.check_output(['git','show',':public/profiles/r23.json'],cwd=root)
             self.assertEqual(hashlib.sha256(staged).hexdigest(),hashlib.sha256(raw).hexdigest())
 
     def test_reject_unlisted_files_and_firmware(self):
@@ -56,7 +56,7 @@ class ReleaseTests(unittest.TestCase):
                 self.assertEqual(hashlib.sha256((public/'core'/name).read_bytes()).hexdigest(),value);checked+=1
         self.assertEqual(checked,25)
         catalog=json.loads((public/'profiles/catalog.json').read_text(encoding='utf-8'))
-        self.assertEqual(len(catalog['profiles']),7)
+        self.assertEqual(len(catalog['profiles']),3)
         for firmware,entry in catalog['profiles'].items():
             raw=(public/'profiles'/entry['file']).read_bytes()
             self.assertEqual(len(raw),entry['profile_bytes'])

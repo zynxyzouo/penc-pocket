@@ -1,5 +1,5 @@
 {
-  "sha256": "78a066bf272712aee1bf1868522dbcccbca0ee6586963940bdc61ca111c4809d",
+  "sha256": "0c7953432d89c924221ee8b30054a25fd7c954ec35565b32bd499a5ac2daf882",
   "description": "Local native function bench; explicit two-pet demo RAM with hunger 2/4, not full boot or device save",
   "entries": {
     "input_home": 2098665,
@@ -115,9 +115,12 @@
     "local_battle_settle": "2C6E40",
     "local_battle_train": "2C6F40",
     "local_battle_spar_admit": "2C7080",
-    "tag_fix_pair_draw": "2C74E0",
     "tag_fix_pair_gate": "2C7520",
     "tag_fix_tagtext": "2CEE00",
+    "tag_fix_parity": "2CAC00",
+    "tag_fix_go": "2CAC40",
+    "tag_fix_not_ready": "2CAC80",
+    "tag_fix_result2": "2CAD00",
     "backup_jogress_bmode": "2CC100",
     "backup_jogress_bselect": "2CC180",
     "backup_jogress_bkeys": "2CC200",
@@ -165,9 +168,17 @@
     "retire_egg": "2C8F00",
     "fast_render_loop": "3FC680",
     "fast_render_rowptr": "3FC6EB",
-    "big_text_fix": "2C9500",
-    "big_text_book": "2C9B5F",
-    "big_text_jogress": "2C9B7A"
+    "list_menu_post": "2C9500",
+    "list_menu_table_train": "2C9B37",
+    "list_menu_table_quest": "2C9B6E",
+    "list_menu_table_battle": "2C9B99",
+    "list_menu_table_pendulum": "2C9BC3",
+    "list_menu_table_light": "2C9BFA",
+    "list_menu_table_settings": "2C9C3E",
+    "list_menu_table_jogress": "2C9C84",
+    "list_menu_table_book": "2C9CC8",
+    "quest_stage_stage": "2CB200",
+    "quest_stage_clamp": "2CB300"
   },
   "initial_ram": {
     "0826": 5,
@@ -248,7 +259,7 @@
     "0CC0": 1
   },
   "version": "R8",
-  "filename": "PenC312_DualPet_R18_EXPERIMENTAL.bin",
+  "filename": "PenC312_DualPet_R23_EXPERIMENTAL.bin",
   "extra_sprite_regions": [
     {
       "start": 1912116,
@@ -356,7 +367,7 @@
   "preview_audio": "Native mute setting seeded at host reset; sound IRQ is not emulated",
   "r8_time": {
     "version": 1,
-    "firmware_sha256": "78a066bf272712aee1bf1868522dbcccbca0ee6586963940bdc61ca111c4809d",
+    "firmware_sha256": "0c7953432d89c924221ee8b30054a25fd7c954ec35565b32bd499a5ac2daf882",
     "tick_entry": 2991104,
     "frame_entry": 2993664,
     "default_mode": 0,
@@ -364,7 +375,7 @@
   },
   "r8_local_play": {
     "version": 1,
-    "firmware_sha256": "78a066bf272712aee1bf1868522dbcccbca0ee6586963940bdc61ca111c4809d",
+    "firmware_sha256": "0c7953432d89c924221ee8b30054a25fd7c954ec35565b32bd499a5ac2daf882",
     "source_sha256": "eb3be1f0048582ac6e1501a7da1df787c754a781f28d5eb34442036877db9e0f",
     "components": [
       "stability",
@@ -376,7 +387,7 @@
   },
   "r8_ui": {
     "version": 1,
-    "firmware_sha256": "78a066bf272712aee1bf1868522dbcccbca0ee6586963940bdc61ca111c4809d",
+    "firmware_sha256": "0c7953432d89c924221ee8b30054a25fd7c954ec35565b32bd499a5ac2daf882",
     "source_sha256": "aa8924ddee43fe04f7cf17e4da78a399b8eecc6fc03754d731891308e724fd82",
     "components": [
       "fast_seconds",
@@ -405,7 +416,8 @@
       "pet_play",
       "retire",
       "fast_render",
-      "big_text"
+      "list_menu",
+      "quest_stage"
     ],
     "asset_regions": [
       [

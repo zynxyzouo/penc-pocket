@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Public hosting adaptation, 2026-10-28. See MODIFICATIONS.md.
 // Profiles are data. Keep their original UTF-8 text: snapshots pin those bytes.
-export const LEGACY_SHA='78a066bf272712aee1bf1868522dbcccbca0ee6586963940bdc61ca111c4809d';
 export function decodeProfile(bytes){
   if(bytes.byteLength>262144)throw new Error('設定檔過大，請選取隨 BIN 附上的 .emulator.json。');
   return new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}).decode(bytes);

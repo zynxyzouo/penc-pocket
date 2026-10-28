@@ -3,13 +3,18 @@
 - PenC Pocket contains a Python adaptation of selected MAME 0.289 unSP
   instruction behavior, explicit peripheral/host adapters and a browser UI.
   This is not an official MAME release or a full hardware implementation.
-- This public release adds GPL notices to the core. No executable Python AST
-  changed. Per-file download hashes are refreshed; snapshot ABI identifiers
-  remain compatible with the prior implementation.
+- The initial public release added GPL notices without executable Python AST
+  changes. The subsequent R23 update admits one additional exact BIN hash in
+  boot, native settings, away catch-up and sound snapshot guards, after checking
+  their unchanged native regions. CPU instructions and snapshot schemas remain
+  unchanged; per-file download hashes are refreshed.
+- R23 replaces the bundled r18/r19/r20/r19h3/r20h4 profiles. TEST4 and DMC remain.
+  Older adapter admissions and stored-profile migration records are retained for
+  existing local saves; no user BIN or saved state is deleted or converted to R23.
 - The original browser integration used a private authenticated relay.
   Static hosting defaults to no relay, with a visible unavailable state and
   no background pairing attempts. QR links preserve the hosting subpath.
-- Profiles r19h3/r20h4 omit only `r16h.art` and `r16h.base_path`, unused local
+- Previously bundled profiles r19h3/r20h4 omitted only `r16h.art` and `r16h.base_path`, unused local
   build metadata. `public/profile-migrations.js` records the exact admitted
   hash transition. Only that transition is allowed before normal restore
   validation; firmware/core identities and saved state are not rewritten.
