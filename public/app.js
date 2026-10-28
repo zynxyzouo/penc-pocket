@@ -94,8 +94,12 @@ function display(r,activeFrame=false){
 function clearKeys(){held.clear();keyboard.clear();pointers.clear();events=[];clearTimeout(longTimer);keyGeneration++;buttons.forEach(b=>b.classList.remove('pressed'));deviceUI.setKeys([]);}
 function pause(save=true){
   if(autoLoading)save=false; // Do not persist a partly restored startup frame.
+  const refresh=catching&&machineFamily==='penc';
   running=false;catching=false;playGeneration++;sound.stop();clearTimeout(timer);fraction=0;lastClock=0;motionPending=false;phoneMotion.reset();clearKeys();controls();
-  if(loaded&&worker){const g=generation;return rpc('release').then(s=>{if(save&&g===generation)return persist(s);}).catch(storageError);}
+  if(loaded&&worker){const g=generation,token=playGeneration;return rpc('release').then(async s=>{
+    if(save&&g===generation)await persist(s);
+    if(refresh&&g===generation&&token===playGeneration){const r=await rpc('present');if(g===generation&&token===playGeneration)display(r);}
+  }).catch(storageError);}
   return Promise.resolve();
 }
 function fail(e){pause(false);fatal=true;controls();status('遇到尚未支援的流程，已停止。可匯出快照或重設測試。 '+String(e.message).trim().split('\n').at(-1).slice(0,190),true);}
@@ -106,12 +110,13 @@ async function start({fromGesture=false}={}){
   if(fromGesture)activateInputsFromGesture();else sound.resume();
   if(catching||running)return;
   $('menu-dialog').close();catching=true;const token=++playGeneration,g=generation;controls();
-  let blocked='';
+  let blocked='',lastPresentation=-Infinity;
   try{
     for(;;){
-      const r=await rpc('catch-up');
+      const r=await rpc('catch-up',{present:performance.now()-lastPresentation>=250});
       if(token!==playGeneration||g!==generation||document.hidden)return;
-      display(r);const remaining=r.continuity?.pending_seconds||0;
+      if(r.clock){display(r);lastPresentation=performance.now();}
+      const remaining=r.continuity?.pending_seconds||0;
       blocked=r.catch_up?.blocked_reason||'';
       if(blocked||remaining===0)break;
       const text='正在補算離開時間，尚餘 '+formatDuration(remaining)+'；點螢幕可先待機。';

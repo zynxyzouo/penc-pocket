@@ -31,20 +31,22 @@
     "native_settings.py",
     "away_bridge.py",
     "continuity.py",
-    "sound_state.py"
+    "sound_state.py",
+    "cpu_accelerator.py"
   ],
   "runtime_sha256": {
     "audio_bridge.py": "30d1c1ee3c4213d3882d73f150fbdac4ca310a693fdff2267ccb5d92b11a46c0",
     "audio_completion.py": "53830afa57e969e5bcdcc9bf2a6dc7dde8ccbf9cf003f3985722c2b95e7e96b7",
     "native_link_guard.py": "14853add02b5db714ee39c3451a8c9ae8c0a23255e98a4a16be2ed15bf597286",
     "network_battle.py": "b0d335cc7dee745f2c52803bd2baedc078e8ba1147db129d070892df1d0065e9",
-    "runtime_bridge.py": "959ee65fd37d00eef96d47e4ee1a16a8ddb64e4c7758dd9b507e0bf26d5bed73",
+    "runtime_bridge.py": "43c3e7849c49fc5ef5b17cb21116605e0e2b4355aa33180a4ddf2145d4983eff",
     "native_connector.py": "d8bc1d40e3c38dbf3540c424d15146cb5729450cfa101ee61dd74a8c74e0858d",
     "native_boot.py": "81b8c957118027583b4065010dfc444f17fe7ab370174506657db931dbbe62e1",
     "native_settings.py": "bfae7a1f72335636299932b78b47a465fd48823cf63813e210d2e8d4e43524d3",
     "away_bridge.py": "aa94d4f69f901b776ef8d50fb2217fb90eecad01cc76c428fd3d8379cbad15dd",
     "continuity.py": "1fb46c890a8febbd5f4ce74be78806a1b6cc2e9237f0f59cd02cb70311c18441",
-    "sound_state.py": "8b57d162dd75c7e62a7063c3be2252a98596fc97061b23726951b6e987356748"
+    "sound_state.py": "8b57d162dd75c7e62a7063c3be2252a98596fc97061b23726951b6e987356748",
+    "cpu_accelerator.py": "224e12c785c26ed0309d799c69299f414dd535d61f75baad4c9fc98025c9de45"
   },
   "family_files": [
     "dmc_machine.py",
