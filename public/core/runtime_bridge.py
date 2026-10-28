@@ -25,6 +25,8 @@ import native_settings
 import continuity
 import away_bridge
 import sound_state
+import offline_custody
+import settlement_session as settlement
 
 
 SENSOR_SIGNATURES = (
@@ -239,6 +241,7 @@ def _dispatch(request_json):
             raise ValueError('Unknown link operation')
         return json.dumps(result, separators=(',', ':'))
     if op == 'frame':
+        if n.bench is not None:settlement.end(n.bench)
         result = advance(req.get('keys', []), req.get('seconds', 0), req.get('long', False),
                          req.get('frames', 1), req.get('motion', False),
                          req.get('audio_elapsed_ms'), req.get('audio_speed', 1))
@@ -250,16 +253,32 @@ def _dispatch(request_json):
         result.update(motion_metadata())
         result['native_link']=native_connector.cable.metadata(n.bench)
         return json.dumps(result,separators=(',',':'))
+    if op=='offline-policy':
+        if n.bench is None:raise ValueError('No firmware loaded')
+        settlement.restore_policy(n.bench,{'version':1,'mode':req.get('mode')},offline_custody.supports(n.bench))
+        settlement.end(n.bench)
+        return json.dumps(n.render(force=True),separators=(',',':'))
     if op=='catch-up':
         if n.bench is None:raise ValueError('No firmware loaded')
         present=req.get('present',True)
         if type(present) is not bool:raise ValueError('Presentation flag must be boolean')
-        due=continuity.metadata(n.bench)['pending_seconds']
+        mode=settlement.policy(n.bench,offline_custody.supports(n.bench))
+        if mode=='custody':settlement.begin(n.bench)
+        else:settlement.end(n.bench)
+        due=settlement.metadata(n.bench)['pending_seconds']
         if native_connector.cable.connected:
             progress={'processed_seconds':0,'remaining_seconds':due,'blocked_reason':'連線中請先完成或中斷連線，再補算離開時間。'}
         else:
-            progress=away_bridge.catch_up(n.bench,due,budget_ms=35)
+            engine=offline_custody if mode=='custody' else away_bridge
+            try:
+                progress=engine.catch_up(n.bench,due,budget_ms=35)
+            except Exception:
+                settlement.end(n.bench)
+                raise
             continuity.consume(n.bench,progress['processed_seconds'])
+        progress['mode']=mode
+        if progress['remaining_seconds']==0 or progress['blocked_reason']:
+            settlement.end(n.bench)
         # Progress packets need no image/clock projection. Always present the
         # final committed state and any native boundary that prevents catch-up.
         result=n.render() if present or progress['remaining_seconds']==0 or progress['blocked_reason'] else {}
@@ -274,11 +293,13 @@ def _dispatch(request_json):
         n.bench=candidate;n.sprite_cache={};n.last_scene=None
         clear_motion();native_connector.cable.clear();audio_completion.clock.clear()
         continuity.initialize(candidate)
+        settlement.reset(candidate)
         result=advance([])
         result.pop('sound_events',None)
         return json.dumps(result,separators=(',',':'))
     if op in ('load', 'release', 'restore', 'reset'):
         clear_motion()
+    if op=='release' and n.bench is not None:settlement.end(n.bench)
     if op in ('load', 'restore', 'reset'):
         audio_completion.clock.clear()
         native_connector.cable.clear()
@@ -287,6 +308,7 @@ def _dispatch(request_json):
             raise ValueError('請先選取 BIN。')
         n.bench.reset()
         continuity.initialize(n.bench)
+        settlement.reset(n.bench)
         n.sprite_cache = {}
         n.last_scene = None
         result = advance([])
@@ -294,10 +316,15 @@ def _dispatch(request_json):
     else:
         # Original loader/snapshot validation and snapshot identity stay intact.
         result = json.loads(n.dispatch(request_json))
-        if op=='load':continuity.initialize(n.bench)
+        if op=='load':
+            continuity.initialize(n.bench)
+            settlement.reset(n.bench)
+            settlement.restore_policy(n.bench,None,offline_custody.supports(n.bench))
         elif op=='restore':
             continuity.restore(n.bench,req['snapshot'].get('continuity'))
             sound_state.restore(n.bench,req['snapshot'].get('sound_completion'))
+            settlement.restore_policy(n.bench,req['snapshot'].get('offline_policy'),offline_custody.supports(n.bench))
+            settlement.reset(n.bench)
         if op in ('load', 'restore'):
             if native_connector.supports(n.bench.code) and native_link_guard.pending(n.bench):
                 native_connector.cable.disconnect(n.bench)
@@ -336,11 +363,14 @@ def dispatch(request_json):
     result=json.loads(_transaction(request_json))
     if n.bench is not None:
         if result.get('format')==n.FORMAT:
-            result['continuity']=continuity.snapshot(n.bench)
+            result['continuity']=settlement.snapshot(n.bench)
             result['sound_completion']=sound_state.snapshot(n.bench)
+            result['offline_policy']={'version':1,'mode':settlement.policy(n.bench,offline_custody.supports(n.bench))}
         elif 'clock' in result or 'catch_up' in result:
             result['native_boot']=native_boot.metadata(n.bench)
             result['native_settings']=native_settings.metadata(n.bench)
-            result['continuity']=continuity.metadata(n.bench)
+            result['continuity']=settlement.metadata(n.bench)
             result['continuity']['safe']=away_bridge.safe(n.bench)
+            available=offline_custody.supports(n.bench)
+            result['offline_policy']={'mode':settlement.policy(n.bench,available),'available':available}
     return json.dumps(result,separators=(',',':'))
