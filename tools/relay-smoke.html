@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant"><meta charset="utf-8"><title>PenC 免費連線驗證</title>
+<style>body{font:18px system-ui;margin:3rem;max-width:850px;background:#eff3ed;color:#142b24}button{padding:1rem;border-radius:12px}pre{white-space:pre-wrap;background:white;padding:1.5rem;border-radius:12px}</style>
+<h1>PenC 免費連線驗證</h1>
+<p>兩端透過真實 HTTP 與本機 Cloudflare workerd 交換原生大小封包。測試不呼叫 TURN，也不代表兩支 iPhone 或實際遊戲流程已驗證。</p>
+<button id="run">開始免費連線測試</button><pre id="result">尚未測試</pre>
+<script type="module">
+// SPDX-License-Identifier: GPL-3.0-or-later
+import {RelayTransport} from '/relay-transport.js';
+const result=document.querySelector('#result'),button=document.querySelector('#run');
+const check=(ok,message)=>{if(!ok)throw Error(message);};
+const token=()=>[...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,'0')).join('');
+button.onclick=async()=>{
+ button.disabled=true;result.textContent='正在建立兩端邀請…';
+ const ts=[0,1].map(()=>new RelayTransport({endpoint:location.origin+'/api/link'}));
+ const ss=[0,1].map(()=>({token:token(),code:null}));
+ const ps=['a','b'].map(x=>({firmware:x.repeat(64),transport:'f'.repeat(64)}));
+ const apply=(i,r)=>{ss[i].code=r.code;return r;};
+ const request=async(i,action,fields={})=>apply(i,await ts[i].request(action,fields,ss[i]));
+ try{
+  await Promise.all(ts.map((t,i)=>request(i,'create',{profile:ps[i]})));
+  const peers=ss.map(s=>s.code);
+  await Promise.all(ts.map((t,i)=>request(i,'pair',{profile:ps[i],peer:peers[1-i]})));
+  const exchange=(i,received=0,packets=[])=>request(i,'exchange',{received,packets});
+  const packets=[{seq:1,words:[0,1,2,3,4,5,6,65535]},{seq:1,words:[65535,6,5,4,3,2,1,0]}];
+  const stored=await exchange(0,0,[packets[0]]);check(stored.connected&&stored.accepted===0,'伺服器存放不可假裝已收到');
+  const b=await exchange(1,0,[packets[1]]),a=await exchange(0,0,[packets[0]]);
+  check(JSON.stringify(a.packets)==JSON.stringify([packets[1]]),'A 收到內容不符');check(JSON.stringify(b.packets)==JSON.stringify([packets[0]]),'B 收到內容不符');
+  await exchange(0,1);check((await exchange(1,1)).accepted===1,'B 缺少對方 ACK');check((await exchange(0,1)).accepted===1,'A 缺少對方 ACK');
+  await request(0,'leave');check((await exchange(1,1)).closed,'對方未收到斷線');
+  const quota=new RelayTransport({endpoint:location.origin+'/quota/api/link'}),q={token:token(),code:null};
+  q.code=(await quota.request('create',{profile:ps[0]},q)).code;
+  await quota.request('exchange',{received:0,packets:[]},q);
+  let error;try{await quota.request('exchange',{received:0,packets:[]},q);}catch(e){error=e;}
+  check(error?.status===429,'超額未停止');quota.close();
+  result.textContent=JSON.stringify({status:'PASS',realHTTP:true,workerdSQLite:true,mixedFirmware:true,packetsEachDirection:1,peerACK:true,disconnect:true,quota429:true,turnRequests:0,realIPhoneVerified:false},null,2);
+ }catch(e){result.textContent='FAIL: '+e.message;}
+ finally{await Promise.all(ts.map((t,i)=>t.request('leave',{},ss[i]).catch(()=>{})));ts.forEach(t=>t.close());button.disabled=false;}
+};
+</script></html>
