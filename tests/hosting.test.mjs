@@ -16,9 +16,9 @@ test('QR remains inside the project and round-trips through the decoder',()=>{
   assert.equal(decode(pixels,size,size).data,url);
 });
 
-test('relay endpoint rejects unsafe URLs and stays disabled by default',async()=>{
+test('relay endpoint rejects unsafe URLs and uses the verified Free relay',async()=>{
   const {resolveRelayEndpoint,relayEndpoint}=await import('../public/hosting.js');
-  assert.equal(relayEndpoint,null);
+  assert.equal(relayEndpoint,'https://penc-pocket-pairing.penc-pocket-deploy-tools.workers.dev/api/link');
   assert.equal(resolveRelayEndpoint(null,'https://example.org/repo/'),null);
   assert.equal(resolveRelayEndpoint('./api/native-link','https://example.org/repo/'),'https://example.org/repo/api/native-link');
   for(const bad of ['http://relay.example/api','https://user:pass@relay.example/api','javascript:alert(1)','https://relay.example/api?token=x','https://relay.example/api#x'])assert.throws(()=>resolveRelayEndpoint(bad,'https://example.org/'));

@@ -45,6 +45,15 @@ class ReleaseTests(unittest.TestCase):
             (root/'release-files.json').write_text('["../outside.txt"]')
             with self.assertRaisesRegex(ValueError,'Unsafe'):collect(root)
 
+    def test_reject_cloudflare_local_secrets_even_if_allowlisted(self):
+        for name in ['.dev.vars','.dev.vars.production','cloudflare/.wrangler/cache.json']:
+            with self.subTest(name=name), tempfile.TemporaryDirectory(dir=ROOT) as folder:
+                root=Path(folder);secret=root/name
+                secret.parent.mkdir(parents=True,exist_ok=True)
+                secret.write_text('local-only-fixture')
+                (root/'release-files.json').write_text(json.dumps(sorted([name,'release-files.json'])))
+                with self.assertRaisesRegex(ValueError,'Forbidden'):collect(root)
+
     def test_source_zip_is_deterministic(self):
         self.assertEqual(source_zip({'b.txt':b'b','a.txt':b'a'}),source_zip({'a.txt':b'a','b.txt':b'b'}))
 
