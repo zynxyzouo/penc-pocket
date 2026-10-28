@@ -59,11 +59,12 @@ class ReleaseTests(unittest.TestCase):
 
     def test_all_core_and_profile_bytes_are_pinned(self):
         public=ROOT/'public';config=json.loads((public/'core-config.json').read_text())
-        checked=0
+        checked=set()
         for key in ['file_sha256','presentation_sha256','runtime_sha256','family_sha256']:
             for name,value in config[key].items():
-                self.assertEqual(hashlib.sha256((public/'core'/name).read_bytes()).hexdigest(),value);checked+=1
-        self.assertEqual(checked,26)
+                self.assertEqual(hashlib.sha256((public/'core'/name).read_bytes()).hexdigest(),value)
+                self.assertNotIn(name,checked);checked.add(name)
+        self.assertEqual(checked,{path.name for path in (public/'core').glob('*.py')})
         catalog=json.loads((public/'profiles/catalog.json').read_text(encoding='utf-8'))
         self.assertEqual(len(catalog['profiles']),3)
         for firmware,entry in catalog['profiles'].items():
