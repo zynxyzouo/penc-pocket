@@ -1,5 +1,9 @@
 # Modifications — 2026-10-28
 
+- Homepage startup now loads the last locally remembered BIN through the existing
+  profile/hash and snapshot validation path. Gameplay remains paused until a tap;
+  loading locks input and exposes recoverable errors without replacing bad saves.
+  No firmware distribution or download was added.
 - PenC Pocket contains a Python adaptation of selected MAME 0.289 unSP
   instruction behavior, explicit peripheral/host adapters and a browser UI.
   This is not an official MAME release or a full hardware implementation.
