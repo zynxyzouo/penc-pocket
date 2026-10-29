@@ -1,5 +1,12 @@
 # Modifications — 2026-10-29
 
+- Foreground CPU decoding now includes generic stack/control and DS/FR
+  instructions, reducing repeated Python dispatch while preserving instruction
+  counts, traces, strict failures and host hooks. Urgent key events request one
+  native update before presentation; unfinished batch claims are refunded with
+  at most three owed updates retained. No BIN, audio calibration or snapshot ABI
+  changes. Desktop browser checks are not physical Android performance evidence.
+
 - R23 adds an explicit offline custody policy: feed, clean and bedtime lights
   protect against new unattended care mistakes without erasing past history.
   Native code owns sleep, growth, evolution routes and normal stage resets.
