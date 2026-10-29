@@ -156,6 +156,7 @@ async function pump(){
     const r=await rpc('frame',{keys,seconds,long:!!event?.long,frames,motion,audio_elapsed_ms:audioElapsed,audio_speed:sound.playbackRate});
     if(g!==generation)return;
     const activeFrame=running&&playToken===playGeneration;
+    if(activeFrame)pacer.complete(r.completed_frames);
     if(activeFrame)soundTimeline.acknowledge(r.sound_clock_started,performance.now());
     display(r,activeFrame);
     if(r.native_link_notice){
