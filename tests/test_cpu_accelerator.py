@@ -87,6 +87,47 @@ class AcceleratorTests(unittest.TestCase):
         self.assertEqual(state(pair[0]), state(pair[1]))
         self.assertLess(counts[1], counts[0] * .55, counts)
 
+    def test_bank_and_flag_loop_reduces_dispatch_work(self):
+        code = struct.pack('<5H', 0xfe00, 0xf034, 0xf03c, 0xf02a, 0xee45)
+        pair = [cls(code, {}, adapters=False) for cls in (CPU, self.fast)]
+        counts = []
+        for cpu in pair:
+            count = 0
+            def profile(frame, event, arg):
+                nonlocal count
+                if event == 'call':
+                    count += 1
+            sys.setprofile(profile)
+            try:
+                outcome(cpu, 'run', 0x200000, direct=True, budget=5000)
+            finally:
+                sys.setprofile(None)
+            counts.append(count)
+        self.assertEqual(state(pair[0]), state(pair[1]))
+        self.assertEqual(pair[1].steps, 5000)
+        self.assertLess(counts[1], counts[0] * .4, counts)
+
+    def test_stack_control_loop_reduces_dispatch_work(self):
+        # PUSH R1; POP R1; CALL subroutine; branch back; subroutine RET.
+        code = struct.pack('<7H', 0xd288, 0x9088, 0xf060, 6, 0xee45, 0xf165, 0x9a90)
+        pair = [cls(code, {}, adapters=False) for cls in (CPU, self.fast)]
+        counts = []
+        for cpu in pair:
+            count = 0
+            def profile(frame, event, arg):
+                nonlocal count
+                if event == 'call':
+                    count += 1
+            sys.setprofile(profile)
+            try:
+                outcome(cpu, 'run', 0x200000, direct=True, budget=5000)
+            finally:
+                sys.setprofile(None)
+            counts.append(count)
+        self.assertEqual(state(pair[0]), state(pair[1]))
+        self.assertEqual(pair[1].steps, 5000)
+        self.assertLess(counts[1], counts[0] * .65, counts)
+
     def test_clock_and_flash_adapters_keep_order_and_failure(self):
         # CALL internal ROM; pop SR/PC back to the host sentinel.
         for target, ram, kwargs in (
@@ -116,6 +157,31 @@ class AcceleratorTests(unittest.TestCase):
             errors = [outcome(cpu, 'run', 0x20fffe, direct=True, budget=budget) for cpu in pair]
             self.assertEqual(errors[0], errors[1])
             self.assertEqual(state(pair[0]), state(pair[1]))
+
+    def test_stack_aliases_partial_failures_and_custom_stack_hooks(self):
+        # Every stack register, including SR/PC aliases, with reads failing
+        # partway through a multi-register POP and writes redirecting the PC.
+        for op in (0xd2b0, 0xd2b6, 0xd2b7, 0x90b0, 0x90b6, 0x90b7,
+                   0xf036, 0xf037, 0xfe36, 0xfe37):
+            code = struct.pack('<4H', op, 0x0241, 0x0241, 0x0241)
+            for ram in ({}, {0x1f01: 3, 0x1f02: 4}):
+                pair = [cls(code, ram, adapters=False) for cls in (CPU, self.fast)]
+                errors = [outcome(cpu, 'run', 0x200000, direct=True, budget=4) for cpu in pair]
+                self.assertEqual(errors[0], errors[1], hex(op))
+                self.assertEqual(state(pair[0]), state(pair[1]), hex(op))
+        def push(cpu, reg, value):
+            cpu.adapters.append(('push', reg, value))
+            CPU.push(cpu, reg, value)
+        def pop(cpu, reg):
+            cpu.adapters.append(('pop', reg))
+            return CPU.pop(cpu, reg)
+        code = struct.pack('<3H', 0xd288, 0x9088, 0xee43)
+        pair = [type('StackHooks', (cls,), {'push': push, 'pop': pop})(code, {})
+                for cls in (CPU, self.fast)]
+        errors = [outcome(cpu, 'run', 0x200000, direct=True, budget=17) for cpu in pair]
+        self.assertEqual(errors[0], errors[1])
+        self.assertEqual(state(pair[0]), state(pair[1]))
+        self.assertTrue(pair[1].adapters)
 
     def test_word_boundaries_and_truncated_immediate(self):
         for code in (b'', b'\x00', b'\x08\x93', b'\x08\x93\xff'):
@@ -162,6 +228,41 @@ class AcceleratorTests(unittest.TestCase):
                           for cpu in pair]
                 self.assertEqual(errors[0], errors[1], (case, repeat))
                 self.assertEqual(state(pair[0]), state(pair[1]), (case, repeat))
+
+    def test_call_override_can_replace_register_bank(self):
+        def call(cpu, target, ret):
+            cpu.calls.append(target)
+            cpu.r = list(cpu.r)
+            cpu.setpc(ret)
+        code = struct.pack('<3H', 0xf040, 0, 0xf165)
+        pair = [type('ReplaceCallBank', (cls,), {'call': call})(code, {})
+                for cls in (CPU, self.fast)]
+        errors = [outcome(cpu, 'run', 0x200000, direct=True, budget=10) for cpu in pair]
+        self.assertEqual(errors[0], errors[1])
+        self.assertEqual(state(pair[0]), state(pair[1]))
+        self.assertEqual([pc for pc, op in pair[1].trace], [0x200000, 0x200002])
+
+    def test_memory_overrides_can_replace_register_bank_within_instructions(self):
+        def read(cpu, address):
+            value = CPU.read(cpu, address)
+            cpu.r = list(cpu.r)
+            cpu.r[2] = 0x1234
+            return value
+        def write(cpu, address, value):
+            CPU.write(cpu, address, value)
+            cpu.r = list(cpu.r)
+            cpu.r[2] = 0x1234
+        # Load then ADD in same block, postincrement load, PUSH and POP.
+        for op in (0x9200, 0x92d2, 0xd288, 0x9088):
+            code = struct.pack('<3H', op, 0x0441, 0xf165)
+            for method in ('step', 'run'):
+                pair = [type('ReplaceMemoryBank', (cls,), {'read': read, 'write': write})(
+                    code, {0: 5, 0x1e12: 5, 0x1f01: 5}) for cls in (CPU, self.fast)]
+                kwargs = {'direct': True, 'budget': 3} if method == 'run' else {}
+                args = (0x200000,) if method == 'run' else ()
+                errors = [outcome(cpu, method, *args, **kwargs) for cpu in pair]
+                self.assertEqual(errors[0], errors[1], (hex(op), method))
+                self.assertEqual(state(pair[0]), state(pair[1]), (hex(op), method))
 
     def test_read_override_redirect_and_instruction_override_are_honored(self):
         code = struct.pack('<5H', 0x9200, 0x0241, 0x0241, 0x0241, 0x0241)
