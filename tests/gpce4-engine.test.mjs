@@ -37,3 +37,25 @@ test('invalid replacement input preserves running machine',async()=>{
  const m=await machine(),f=fixture();await m.load(f.bin,f.irom);m.run(1000,0);const before=await m.snapshot();
  await assert.rejects(m.load(new Uint8Array(1),f.irom));assert.deepEqual(await m.snapshot(),before);
 });
+
+test('disconnecting a QR pair before native battle preserves a busy setup screen',async()=>{
+ const m=await machine(),f=fixture();await m.load(f.bin,f.irom);m.keys(0);
+ const ram=new Uint16Array(m.e.memory.buffer,m.e.gp_ram_ptr(),0x3000);
+ // Synthetic UI fixture: DAD is a shared screen lock, not a link-active flag.
+ ram[0xc9c]=2;ram[0xdad]=1;
+ m.link.profile={firmware:m.identity.firmware_sha256,transport:'a'.repeat(64)};
+ const before=await m.snapshot();m.connect('setup-pair',0);
+ assert.equal(m.disconnect().native_link.connected,false);
+ assert.deepEqual(await m.snapshot(),before);
+});
+
+test('private native title can pair and disconnect without advancing or resetting the game',
+ {skip:!process.env.PENC_AUDIO_BIN||!process.env.PENC_AUDIO_IROM},async()=>{
+ const m=await machine();await m.load(new Uint8Array(await readFile(process.env.PENC_AUDIO_BIN)),new Uint8Array(await readFile(process.env.PENC_AUDIO_IROM)));
+ for(let i=0;i<96;i++)m.run(250000);
+ const ram=new Uint16Array(m.e.memory.buffer,m.e.gp_ram_ptr(),0x3000);
+ assert.ok(![15,16,19].includes(ram[0xc9c]));assert.notEqual(ram[0xdad],0);
+ const before=await m.snapshot();m.connect('native-title',0);
+ assert.equal(m.disconnect().native_link.connected,false);
+ assert.deepEqual(await m.snapshot(),before);
+});
