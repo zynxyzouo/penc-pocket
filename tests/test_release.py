@@ -65,6 +65,11 @@ class ReleaseTests(unittest.TestCase):
                 self.assertEqual(hashlib.sha256((public/'core'/name).read_bytes()).hexdigest(),value)
                 self.assertNotIn(name,checked);checked.add(name)
         self.assertEqual(checked,{path.name for path in (public/'core').glob('*.py')})
+        import base64
+        compiled=config['compiled_core']
+        wasm=base64.b64decode((public/'core'/compiled['file']).read_text().strip(),validate=True)
+        self.assertEqual(wasm[:8],b'\x00asm\x01\x00\x00\x00')
+        self.assertEqual(hashlib.sha256(wasm).hexdigest(),compiled['sha256'])
         catalog=json.loads((public/'profiles/catalog.json').read_text(encoding='utf-8'))
         self.assertEqual(len(catalog['profiles']),3)
         for firmware,entry in catalog['profiles'].items():

@@ -16,6 +16,10 @@ def update(root=ROOT):
               ('runtime_files','runtime_sha256'),('family_files','family_sha256')]
     for names, hashes in groups:
         config[hashes] = {name:digest((public/'core'/name).read_bytes()) for name in config[names]}
+    if config.get('compiled_core'):
+        import base64
+        encoded=(public/'core'/config['compiled_core']['file']).read_text(encoding='ascii').strip()
+        config['compiled_core']['sha256']=digest(base64.b64decode(encoded,validate=True))
     path.write_text(json.dumps(config,indent=2)+'\n',encoding='utf-8',newline='\n')
     path = public/'profiles/catalog.json'
     catalog = json.loads(path.read_text(encoding='utf-8'))

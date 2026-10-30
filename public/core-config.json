@@ -24,6 +24,7 @@
     "audio_bridge.py",
     "audio_completion.py",
     "away_bridge.py",
+    "compiled_cpu.py",
     "continuity.py",
     "cpu_accelerator.py",
     "native_boot.py",
@@ -40,6 +41,7 @@
     "audio_bridge.py": "30d1c1ee3c4213d3882d73f150fbdac4ca310a693fdff2267ccb5d92b11a46c0",
     "audio_completion.py": "53830afa57e969e5bcdcc9bf2a6dc7dde8ccbf9cf003f3985722c2b95e7e96b7",
     "away_bridge.py": "aa94d4f69f901b776ef8d50fb2217fb90eecad01cc76c428fd3d8379cbad15dd",
+    "compiled_cpu.py": "ac110ba0d9aae21e8015aa41dc585d80e8f8d2f0a4609f99c15403c4425291ee",
     "continuity.py": "1fb46c890a8febbd5f4ce74be78806a1b6cc2e9237f0f59cd02cb70311c18441",
     "cpu_accelerator.py": "f445da444e854ffa235e3a1b18f475025109d59730d9471fa5ef799850d6728d",
     "native_boot.py": "81b8c957118027583b4065010dfc444f17fe7ab370174506657db931dbbe62e1",
@@ -73,5 +75,10 @@
     "stock_penc_peripherals.py": "93a31286825f235a1e55c9d771e088c232540249bf55855cda3f6a9a1973bed4"
   },
   "dmc_core_sha256": "99ffb724dfbc1d6e7382a4bbd6bb79f20525eec5eb7e25b63b653b1cd81e3d21",
-  "stock_core_sha256": "ed530cd9f3f43cf40681cd8a9d31b0d2394bdfb76900e4228e1ee2e21afa50c9"
+  "stock_core_sha256": "ed530cd9f3f43cf40681cd8a9d31b0d2394bdfb76900e4228e1ee2e21afa50c9",
+  "compiled_core": {
+    "file": "pocket_cpu.wasm.b64",
+    "sha256": "644276dfe3e58f9ec3ab232abcc02408da4822ef11c43eadf7b8afec8be5359e",
+    "engine": "pocket-wasm-hybrid-v1"
+  }
 }

@@ -10,7 +10,7 @@ import zipfile
 from update_integrity import update
 
 ROOT=Path(__file__).resolve().parents[1]
-IGNORED_DIRS={'.git','dist','node_modules','__pycache__'}
+IGNORED_DIRS={'.git','dist','build','node_modules','__pycache__'}
 FORBIDDEN={'.bin','.rom','.asm','.pyc','.pem','.key','.png','.jpg','.jpeg','.wav','.mp3'}
 def sha(raw):
     return hashlib.sha256(raw).hexdigest()

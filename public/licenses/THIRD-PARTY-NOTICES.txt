@@ -17,6 +17,11 @@ integration. File-local notices identify the changes and date. The public
 integration uses the upstream or-later option to distribute under GPLv3 or later.
 No upstream endorsement or trademark permission is implied.
 
+2026-10-30: Added a locally written freestanding C/Wasm execution backend.
+It links no other emulator core. Its compatibility contract uses the existing
+MAME-derived Python reference; this is not a clean-room rewrite or removal of
+the notices above. C source and its build recipe accompany the source archive.
+
 qrcode-generator 2.0.4 - MIT
 Copyright (c) 2009 Kazuhiko Arase
 Source: https://github.com/kazuhikoarase/qrcode-generator/tree/83b7e8fe3fddd3b0368dbafd6ce56995bd25e3c8
@@ -49,3 +54,31 @@ Matching application source and build scripts:
 ../downloads/penc-pocket-source.zip (from the deployed website)
 The archive includes LICENSE, MODIFICATIONS.md, source and packaging tools.
 The release-manifest.json at the website root identifies its byte hashes.
+
+Zig 0.15.2 compiler/runtime helper notice — MIT
+Source: https://github.com/ziglang/zig/tree/0.15.2
+The toolchain is not distributed. This notice also covers any linked Zig
+compiler runtime helpers in the generated Wasm.
+
+The MIT License (Expat)
+
+Copyright (c) Zig contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
