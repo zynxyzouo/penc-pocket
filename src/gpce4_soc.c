@@ -2,7 +2,8 @@
  * Port of gpce4_machine/soc.py. Register map and IRQ wiring follow MAME
  * 0.289 generalplus_gpce4_soc.cpp / generalplus_gpce4.cpp (BSD-3-Clause,
  * David Haywood). Instruction speed, 48 MHz timer clock and ADC are guesses.
- * No firmware functions are replaced with host implementations.
+ * Admitted packet/sensor peripheral wrappers use host input adapters; native
+ * firmware still owns gameplay, validation, growth, animation and saving.
  */
 #include "gpce4.h"
 #include <stddef.h>
@@ -58,6 +59,50 @@ static uint8_t irom[0x18000], flash[FLASH_SIZE], rgba[96 * 96 * 4];
 static GpSoc soc;
 static GpSnapshot staging;
 static uint32_t metrics[24];
+/* Host observation is ephemeral: never replay sound on restore/present. */
+static uint32_t audio_events[8][4], audio_count;
+/* Network and sensor adapters are enabled only after JS signature admission.
+ * Their live connection/input queues are intentionally excluded from saves. */
+static uint32_t link_enabled, link_tx_pending, link_rx_pending, link_waiting, link_cancel_pending;
+static uint16_t link_tx[8], link_rx[8], link_inbox[8];
+static uint32_t motion_enabled, motion_pending, custody_active, stop_at_ui;
+static uint64_t motion_expires;
+static void clear_host(void) {
+    audio_count = link_enabled = link_tx_pending = link_rx_pending = link_waiting = link_cancel_pending = 0;
+    motion_enabled = motion_pending = custody_active = stop_at_ui = 0;
+}
+API void gp_link_enable(uint32_t enabled) {
+    link_enabled = !!enabled;
+    link_tx_pending = link_rx_pending = link_waiting = link_cancel_pending = 0;
+}
+API uint32_t gp_link_cancel(void) {
+    if (!link_enabled) return 0;
+    link_cancel_pending = 2; link_waiting = 0; link_rx_pending = 0; return 1;
+}
+API uint32_t gp_link_status(void) { return link_tx_pending ? 1 : link_waiting ? 2 : 0; }
+API uint16_t *gp_link_tx_ptr(void) { return link_tx; }
+API uint16_t *gp_link_rx_ptr(void) { return link_rx; }
+API uint32_t gp_link_tx_take(void) { uint32_t had = link_tx_pending; link_tx_pending = 0; return had; }
+API uint32_t gp_link_receive(void) {
+    if (!link_enabled || link_rx_pending) return 0;
+    memcpy(link_inbox, link_rx, sizeof link_inbox); link_rx_pending = 1; link_waiting = 0; return 1;
+}
+API void gp_motion_enable(uint32_t enabled) { motion_enabled = !!enabled; motion_pending = 0; }
+API void gp_motion_clear(void) { motion_pending = 0; }
+API void gp_motion_pulse(void) {
+    if (motion_enabled && soc.ram[0xCA0] == 2) { motion_pending = 1; motion_expires = soc.instr + soc.ips / 4; }
+}
+API uint32_t *gp_audio_events_ptr(void) { return &audio_events[0][0]; }
+API uint32_t gp_audio_event_count(void) { return audio_count; }
+API void gp_audio_clear(void) { audio_count = 0; }
+void gp_observe_call(uint32_t target) {
+    if (custody_active || target != 0x2000A9 || soc.spi_bank || audio_count >= 8 || cpu.r[0] + 1 >= 0x3000) return;
+    uint32_t id = soc.ram[cpu.r[0] + 1];
+    if (id >= 24) return;
+    uint32_t *event = audio_events[audio_count++];
+    event[0] = id; event[1] = soc.spi_bank;
+    event[2] = (uint32_t)soc.instr; event[3] = (uint32_t)(soc.instr >> 32);
+}
 static const uint32_t timebase_bits[6] = {0, 1, 2, 8, 9, 10};
 static const uint32_t timebase_hz[6] = {2, 16, 64, 512, 2048, 4096};
 
@@ -87,6 +132,9 @@ static void update_irqs(void) {
     static const uint16_t masks2[8] = {0,0,0,0,0,0,0x1F00,0x0037};
     uint32_t s1 = (soc.int_status >> 16) & soc.int_ctrl;
     uint32_t s2 = (soc.int_status & 0xFFFF) & soc.int2_ctrl;
+    /* Wake is independent of CPU interrupt delivery. The native sleep routine
+     * disables CPU IRQs, enables 2 Hz in INT2, then polls its latched flag. */
+    if (s1 || s2) cpu.sleeping = 0;
     for (uint32_t n = 0; n < 8; ++n)
         gp_cpu_irq(n + 1, !!((s1 & masks1[n]) | (s2 & masks2[n])));
 }
@@ -337,10 +385,96 @@ API GpCpu *gp_cpu_ptr(void) { return &cpu; }
 API uint16_t *gp_ram_ptr(void) { return soc.ram; }
 API uint16_t *gp_io_ptr(void) { return soc.io; }
 API uint8_t *gp_dirty_ptr(void) { return soc.dirty; }
+static int host_return(void) {
+    uint32_t sp = cpu.r[0];
+    if (sp + 2 >= 0x3000) { fault(2, sp); return 0; }
+    cpu.r[6] = soc.ram[sp + 1]; cpu.r[7] = soc.ram[sp + 2]; cpu.r[0] = sp + 2;
+    ++cpu.steps;
+    return 1;
+}
+/* 1 = consumed native peripheral entry; 2 = wait without consuming time. */
+static int host_boundary(void) {
+    if (soc.spi_bank || custody_active) return 0;
+    uint32_t pc = gp_cpu_pc();
+    if (motion_enabled) {
+        if (motion_pending && soc.instr > motion_expires) motion_pending = 0;
+        if (pc == 0x201BCC) {
+            soc.ram[0xD33] = 0; soc.ram[0xCA0] = 2; soc.ram[0xD3F] = 60;
+            for (uint32_t a = 0xD37; a <= 0xD41; ++a) if (a != 0xD3F) soc.ram[a] = 0;
+            motion_pending = 0; host_return(); return 1;
+        }
+        if (pc == 0x201D1E) {
+            soc.ram[0xCA0] = soc.ram[0xD3D] = 0; motion_pending = 0;
+            host_return(); return 1;
+        }
+        if (pc == 0x201CDA && motion_pending && soc.ram[0xCA0] == 2 && !soc.ram[0xD3D]) {
+            soc.ram[0xD3D] = 1; motion_pending = 0;
+        }
+    }
+    if (!link_enabled) return 0;
+    if (link_tx_pending) return 2;
+    if (pc == 0x2005E9 && link_cancel_pending) {
+        uint32_t main = soc.ram[0xC9C], sub = soc.ram[0xC9E];
+        int unsettled = (main == 15 && sub < 5) || ((main == 16 || main == 19) && sub < 3);
+        if (unsettled) {
+            /* Execute the admitted CONNECT menu's native C branch using this
+             * real frame's return stack. Firmware alone chooses HOME/owner. */
+            soc.ram[0xCCC] = soc.ram[0xCA0] = 0; motion_pending = 0;
+            soc.ram[0x81B] = 0x20; --link_cancel_pending;
+            cpu.r[6] = (cpu.r[6] & 0xFFC0u) | 0x20; cpu.r[7] = 0x1F36;
+        } else link_cancel_pending = 0;
+        return 0;
+    }
+    if (pc == 0x2084E9) {
+        soc.ram[0xCCC] = soc.ram[0xCA0] = 1; soc.ram[0xCCD] = soc.ram[0xCD6] = 0;
+        for (uint32_t a = 0xCCE; a < 0xCD6; ++a) soc.ram[a] = 0;
+        host_return(); return 1;
+    }
+    if (pc == 0x208571 || pc == 0x208595) {
+        soc.ram[0xCCC] = soc.ram[0xCA0] = 0; host_return(); return 1;
+    }
+    if (pc == 0x208926) {
+        memcpy(link_tx, soc.ram + 0xCE0, sizeof link_tx); link_tx_pending = 1;
+        host_return(); return 1;
+    }
+    if (pc == 0x2005E9 && soc.ram[0xCA0] == 1 && soc.ram[0xCCC] == 1) {
+        if (link_rx_pending) {
+            memcpy(soc.ram + 0xCCE, link_inbox, sizeof link_inbox);
+            soc.ram[0xCCC] = 6; link_rx_pending = 0; link_waiting = 0;
+        } else {
+            uint32_t main = soc.ram[0xC9C], sub = soc.ram[0xC9E];
+            int waiting = (main == 15 && sub == 3 && soc.ram[0x86B] != 0x10)
+                || (main == 16 && sub == 1 && soc.ram[0x86A] != 0)
+                || (main == 19 && sub == 1 && soc.ram[0x86B] != 0x14);
+            if (waiting && (soc.ioa_in & 0x20)) { link_waiting = 1; return 2; }
+        }
+    }
+    link_waiting = 0;
+    return 0;
+}
+API int32_t gp_custody_call(uint32_t entry, uint32_t r1, uint32_t maximum) {
+    if (cpu.fault || link_enabled || custody_active || soc.spi_bank || !maximum || maximum > 500000) return -1;
+    switch (entry) {
+    case 0x2D1700: case 0x210E61: case 0x210B53: case 0x2D1F40:
+    case 0x2DA800: case 0x2DAE00: case 0x200000: case 0x2005E9: break;
+    default: return -1;
+    }
+    GpCpu saved = cpu;
+    uint16_t scratch[0x201]; memcpy(scratch, soc.ram + 0x1D00, sizeof scratch);
+    cpu = (GpCpu){0}; cpu.r[0] = 0x1EFE; cpu.r[1] = r1 & 0xFFFF;
+    cpu.r[5] = 0x1E12; cpu.r[6] = entry >> 16; cpu.r[7] = entry & 0xFFFF; cpu.fr = 0x0300;
+    soc.ram[0x1F00] = 0xFFFF; soc.ram[0x1EFF] = 0x3F; custody_active = 1;
+    uint32_t n;
+    for (n = 0; n < maximum && !cpu.fault && !cpu.sleeping && gp_cpu_pc() != 0x3FFFFF; ++n) gp_cpu_step();
+    int32_t result = cpu.fault || cpu.sleeping || n == maximum ? -2 : (int32_t)cpu.r[1];
+    cpu = saved; memcpy(soc.ram + 0x1D00, scratch, sizeof scratch); custody_active = 0;
+    return result;
+}
 API int gp_reset(uint32_t ips) {
     if (!ips) ips = 12000000;
     if (ips < 4096 || ips > 100000000) return 0;
     memset(&soc, 0, sizeof soc);
+    clear_host();
     soc.ips = ips;
     soc.ioa_in = 0xFFFF;
     soc.spi_cmd = -2;
@@ -352,10 +486,15 @@ API int gp_reset(uint32_t ips) {
     return !cpu.fault;
 }
 API uint32_t gp_run(uint32_t instructions) {
+    gp_audio_clear();
     if (cpu.fault || soc.instr > TIME_LIMIT - instructions) return 0;
     uint64_t start = soc.instr, end = start + instructions;
     soc.next_event = soc.instr;
     while (soc.instr < end && !cpu.fault) {
+        if (stop_at_ui && !soc.spi_bank && !cpu.irq_active && !cpu.fiq_active && gp_cpu_pc() == 0x2005E9) break;
+        int handled = host_boundary();
+        if (handled == 2) break;
+        if (handled == 1) { if (!cpu.fault) ++soc.instr; continue; }
         if (soc.instr >= soc.next_event) soc.next_event = tick_timers();
         if (cpu.sleeping && !cpu.sirq) {
             uint64_t target = soc.next_event < end ? soc.next_event : end;
@@ -365,9 +504,22 @@ API uint32_t gp_run(uint32_t instructions) {
         gp_cpu_step();
         if (!cpu.fault) ++soc.instr;
     }
+    if (cpu.fault) gp_audio_clear();
     return (uint32_t)(soc.instr - start);
 }
-API void gp_keys(uint32_t mask) { soc.ioa_in = 0xFFFF & ~(mask & 0x38); }
+API int32_t gp_sync_ui(uint32_t maximum) {
+    if (link_enabled || custody_active || maximum > 24000000 || !maximum || cpu.fault) return -1;
+    stop_at_ui = 1; gp_run(maximum); stop_at_ui = 0; gp_audio_clear();
+    if (cpu.fault) return -1;
+    return !soc.spi_bank && !cpu.irq_active && !cpu.fiq_active && gp_cpu_pc() == 0x2005E9;
+}
+API void gp_keys(uint32_t mask) {
+    uint32_t next = (soc.ioa_in | 0x38) & ~(mask & 0x38);
+    /* 300C is the active-low IOA wake mask. Only changes at input pins count;
+     * verified native sleep configuration FFC7 leaves ABC unmasked. */
+    if ((next ^ soc.ioa_in) & ~soc.io[0xC] & ~soc.io[2] & 0x38) cpu.sleeping = 0;
+    soc.ioa_in = next;
+}
 API uint8_t *gp_rgba_ptr(void) {
     for (uint32_t y = 0; y < 96; ++y) for (uint32_t x = 0; x < 96; ++x) {
         uint32_t v = soc.lcd[(y + 18) * LCD_SIDE + x], at = (y * 96 + x) * 4;
@@ -459,5 +611,6 @@ API int gp_restore(void) {
     if (dirty != s->dirty_count || unknown != s->unknown_count) return 0;
     memcpy(&cpu, c, sizeof cpu);
     memcpy(&soc, s, sizeof soc);
+    clear_host();
     return 1;
 }
