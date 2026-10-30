@@ -24,7 +24,10 @@ env = dict(os.environ, ZIG_GLOBAL_CACHE_DIR=str(build / 'zig-cache'),
 exports = ['gp_irom_ptr', 'gp_flash_ptr', 'gp_flash_size', 'gp_reset', 'gp_run', 'gp_keys',
            'gp_rgba_ptr', 'gp_cpu_ptr', 'gp_ram_ptr', 'gp_io_ptr', 'gp_metrics_ptr',
            'gp_state_ptr', 'gp_state_size', 'gp_restore', 'gp_dirty_ptr',
-           'gp_bus_read', 'gp_bus_write']
+           'gp_bus_read', 'gp_bus_write', 'gp_audio_events_ptr',
+           'gp_audio_event_count', 'gp_audio_clear', 'gp_custody_call', 'gp_sync_ui',
+           'gp_link_enable', 'gp_link_cancel', 'gp_link_status', 'gp_link_tx_ptr', 'gp_link_tx_take',
+           'gp_link_rx_ptr', 'gp_link_receive', 'gp_motion_enable', 'gp_motion_clear', 'gp_motion_pulse']
 with tempfile.TemporaryDirectory(dir=build) as directory:
     raw = Path(directory) / 'gpce4.wasm'
     subprocess.run(common + ['-target', 'wasm32-freestanding', '-nostdlib', '-Wl,--no-entry',
