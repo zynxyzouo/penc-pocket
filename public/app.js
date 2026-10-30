@@ -61,7 +61,8 @@ $('screen-action').onclick=()=>catching?pause():loaded&&!fatal?start({fromGestur
 function rpc(op,fields={}){if(['load','restore','reset','new-game'].includes(op))sound.clearPreview();return new Promise((resolve,reject)=>{const n=++id;pending.set(n,{resolve,reject});worker.postMessage({id:n,op,...fields});});}
 async function ensureCore(){
   if(booting)return booting;
-  worker=new Worker('./worker.js?v=stock-family-14',{type:'module'});
+  const referenceCore=new URLSearchParams(location.search).get('core')==='reference';
+  worker=new Worker('./worker.js?v=compiled-core-1'+(referenceCore?'&core=reference':''),{type:'module'});
   worker.onmessage=({data})=>{if(data.kind==='progress')return status(data.text);const p=pending.get(data.id);if(!p)return;pending.delete(data.id);data.ok?p.resolve(data.result):p.reject(new Error(data.error));};
   worker.onerror=e=>{for(const p of pending.values())p.reject(new Error(e.message||'瀏覽器核心中斷。'));pending.clear();running=false;clearTimeout(timer);fatal=true;controls();status('瀏覽器核心中斷，請重新整理後再試。',true);};
   booting=rpc('boot').catch(e=>{worker.terminate();booting=null;worker=null;throw e;});
