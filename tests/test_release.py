@@ -70,6 +70,10 @@ class ReleaseTests(unittest.TestCase):
         wasm=base64.b64decode((public/'core'/compiled['file']).read_text().strip(),validate=True)
         self.assertEqual(wasm[:8],b'\x00asm\x01\x00\x00\x00')
         self.assertEqual(hashlib.sha256(wasm).hexdigest(),compiled['sha256'])
+        machine=json.loads((public/'machine-config.json').read_text())
+        machine_wasm=base64.b64decode((public/'core'/machine['file']).read_text().strip(),validate=True)
+        self.assertEqual(machine_wasm[:8],b'\x00asm\x01\x00\x00\x00')
+        self.assertEqual(hashlib.sha256(machine_wasm).hexdigest(),machine['sha256'])
         catalog=json.loads((public/'profiles/catalog.json').read_text(encoding='utf-8'))
         self.assertEqual(len(catalog['profiles']),3)
         for firmware,entry in catalog['profiles'].items():
