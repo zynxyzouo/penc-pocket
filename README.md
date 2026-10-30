@@ -21,6 +21,14 @@ PenC 現在使用自製 C／WebAssembly 加速核心處理較長的原生運算�
 保留 Python 快取路徑，避免轉接成本。BIN、遊戲時間與快照格式不變。
 原版 TEST4 與 DMC 暫時保留原本的核心。裝置效能仍會影響動畫與按鍵速度。
 重建方式、適用範圍及限制見 [docs/compiled-core.md](docs/compiled-core.md)。
+
+Menu 另有「整機核心實驗」：將提供的 GPCE4 模型移植為獨立 C／WebAssembly，
+由內部 ROM 原生開機。需自行選取 8 MiB PenC 韌體及對應的 96 KiB 內部 ROM，
+不需 JSON 或 Pyodide；檔案只在本機讀取。此模式支援畫面、ABC、獨立整機
+快照與 Flash 匯出；聲音、晃動、QR 連線與離線託管尚未接上，離開時暫停。
+不能匯入原模式存檔，DMC 方彩不適用，實體計時與手機效能仍待驗證。
+參見 [docs/gpce4-machine.md](docs/gpce4-machine.md)。
+
 R23 預設使用「離線託管」：代為餵食、清潔及睡前關燈，年齡、睡眠與
 成長繼續，不新增未照顧失誤。不替你訓練或對戰，也不清除既有失誤；
 原生進化本來會重設的階段紀錄仍照規則處理。已生病、受傷或死亡時會

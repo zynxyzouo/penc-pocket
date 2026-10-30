@@ -74,7 +74,7 @@ def build(root=ROOT):
         if name.startswith('public/'):
             dest=out/name.removeprefix('public/')
             dest.parent.mkdir(parents=True,exist_ok=True)
-            if name=='public/index.html':raw=raw.replace(b'__RELEASE_ID__',release[:12].encode())
+            if name.endswith('.html'):raw=raw.replace(b'__RELEASE_ID__',release[:12].encode())
             dest.write_bytes(raw)
     (out/'licenses/GPL-3.0.txt').write_bytes(files['LICENSE'])
     (out/'.nojekyll').write_bytes(b'')

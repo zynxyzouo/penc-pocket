@@ -21,6 +21,12 @@ def update(root=ROOT):
         encoded=(public/'core'/config['compiled_core']['file']).read_text(encoding='ascii').strip()
         config['compiled_core']['sha256']=digest(base64.b64decode(encoded,validate=True))
     path.write_text(json.dumps(config,indent=2)+'\n',encoding='utf-8',newline='\n')
+    machine_path=public/'machine-config.json'
+    if machine_path.exists():
+        import base64
+        machine=json.loads(machine_path.read_text(encoding='utf-8'))
+        machine['sha256']=digest(base64.b64decode((public/'core'/machine['file']).read_text(encoding='ascii').strip(),validate=True))
+        machine_path.write_text(json.dumps(machine,indent=2)+'\n',encoding='utf-8',newline='\n')
     path = public/'profiles/catalog.json'
     catalog = json.loads(path.read_text(encoding='utf-8'))
     for firmware, entry in catalog['profiles'].items():
