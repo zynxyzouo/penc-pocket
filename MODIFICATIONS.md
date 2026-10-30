@@ -58,3 +58,7 @@
 - The source package is explicitly inventoried, carries no earlier Git
   history, and accompanies every deployment. Vendor sources retain original
   licenses. Unused React/Vinext/Sites framework code is not in this release.
+
+## 2026-10-30 — compiled execution backend
+
+Added locally authored freestanding C instruction execution, compiled to Wasm, with checked RAM and atomic yields to the existing host adapters. Adaptive dispatch retains the cheaper reference path for short native entries. Existing MAME-derived semantics, GPL and other notices remain; this is not a clean-room licensing claim. Stock/DMC and snapshot identity files stay unchanged. Source, build recipe, differential tests and base64-encoded compiled artifact are included.
