@@ -108,8 +108,10 @@ export class Gpce4Machine{
   const ram=()=>new Uint16Array(this.e.memory.buffer,this.e.gp_ram_ptr(),0x3000);
   const physical=()=>[15,16,19].includes(ram()[0xC9C]);
   const phase={15:5,16:3,19:3},finishing=physical()&&ram()[0xC9E]>=phase[ram()[0xC9C]];
-  // Native C input cancels waiting. Settled animations retain their outcome.
-  if(finishing&&ram()[0xCA0]===0&&ram()[0xCCC]===0){this.keys(0);this.e.gp_audio_clear();this.motion?.clear();this.link.detach();return this.present();}
+  // DAD also locks startup/egg screens. A QR pair alone does not enter native
+  // link mode, so leave those screens untouched. Native C cancels battle wait;
+  // settled animations retain their outcome.
+  if(!physical()||(finishing&&ram()[0xCA0]===0&&ram()[0xCCC]===0)){this.keys(0);this.e.gp_audio_clear();this.motion?.clear();this.link.detach();return this.present();}
   if(!finishing&&physical())this.e.gp_link_cancel();
   for(let n=0;(physical()||ram()[0xDAD])&&n<256;n++){this.keys(0);this.link.run(187500);this.checkFault();}
   this.keys(0);this.e.gp_audio_clear();this.motion?.clear();
