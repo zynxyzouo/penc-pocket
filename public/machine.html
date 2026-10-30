@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#152d29">
+  <meta name="description" content="PenC 整機核心實驗。自行選取本機韌體與內部 ROM，從原生重設入口執行。">
+  <title>PenC Pocket · 整機實驗</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./machine.css">
+</head>
+<body id="machine-app" data-ui-mode="simple">
+<div class="display-viewport">
+<main class="stage">
+<section class="console" aria-label="PenC 整機核心實驗">
+  <div class="device-brand" aria-hidden="true"><strong>PenC<span>POCKET</span></strong></div>
+  <span class="machine-badge">整機實驗</span>
+  <button id="menu-open" class="menu-toggle" aria-haspopup="dialog" aria-controls="menu-dialog" aria-label="開啟選單" title="開啟選單"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><i id="status-dot" aria-hidden="true"></i></button>
+  <button id="orientation-toggle" class="menu-toggle orientation-toggle" aria-label="一鍵橫向" title="一鍵橫向" aria-pressed="false"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M16 3a9 9 0 0 0-10 1M6 1v3h3M18 12v1"/></svg></button>
+  <div class="screen-bezel">
+    <div class="screen-wrap"><canvas id="screen" width="96" height="96" aria-label="96 × 96 整機模擬畫面"></canvas><div id="empty-screen" class="empty-screen"><div class="pixel-glyph">▥</div><strong>PenC Pocket</strong><span>從開機開始的小世界</span></div><button id="screen-action" class="screen-action">＋ 載入本機檔案</button></div>
+    <div class="screen-caption"><span id="live-state">等待載入</span></div>
+  </div>
+  <div class="control-deck">
+    <div class="device-clock" title="虛擬機累計時間，並非遊戲內設定的時鐘"><small class="machine-clock-label">虛擬機累計</small><span id="clock">--:--:--</span></div>
+    <div class="controls" aria-label="遊戲按鍵，鍵盤 A、B、C">
+      <div><button class="game-key" data-key="A" disabled aria-label="A 選擇">A</button><span>SELECT</span></div>
+      <div><button class="game-key key-b" data-key="B" disabled aria-label="B 確認">B</button><span>ENTER</span></div>
+      <div><button class="game-key" data-key="C" disabled aria-label="C 返回">C</button><span>CANCEL</span></div>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+<dialog id="menu-dialog" class="menu-dialog" aria-labelledby="menu-title">
+  <header class="menu-header"><div><span class="eyebrow">PENC POCKET · EXPERIMENTAL</span><h1 id="menu-title">整機實驗</h1></div><button id="menu-close" aria-label="關閉選單">×</button></header>
+  <div class="menu-content">
+    <div class="playbar"><button id="play" class="primary" disabled>▶ 開始</button><span id="perf">本機執行</span><span id="speed">已暫停</span></div>
+    <div class="status-strip" aria-live="polite"><p id="status">選取 8 MiB PenC 韌體與 96 KiB PenC 內部 ROM。檔案與快照只保存在這台裝置，不會上傳。</p></div>
+    <section class="panel machine-limitations">
+      <div class="section-label"><span>實驗狀態</span><a href="./">返回原有模式 ↗</a></div>
+      <p class="muted">由內部 ROM 原生開機，支援畫面、ABC 與整機快照。聲音、晃動、連線與離線託管尚未接上；Menu、背景與關閉期間暫停，不補算離開時間。DMC 方彩不適用。</p>
+      <p class="save-note">這個模式使用獨立快照，不能匯入原有模式的存檔。</p>
+    </section>
+    <section class="panel file-panel">
+      <div class="section-label"><span>遊戲檔案</span><span class="local-badge">僅在本機</span></div>
+      <label class="file-button" for="bin-file">＋ 選取 PenC 韌體 <span class="file-suffix">8 MiB</span></label>
+      <input id="bin-file" type="file" accept=".bin,application/octet-stream" class="visually-hidden">
+      <p id="bin-name" class="file-info">尚未選取</p>
+      <label class="file-button" for="irom-file">＋ 選取 PenC 內部 ROM <span class="file-suffix">96 KiB</span></label>
+      <input id="irom-file" type="file" accept=".bin,.rom,application/octet-stream" class="visually-hidden">
+      <p id="irom-name" class="file-info">尚未選取</p>
+      <label class="remember"><input id="remember" type="checkbox" checked><span>記住這組檔案，下次自動載入為暫停</span></label>
+      <button id="load" class="resume-button primary" disabled>載入整機 →</button>
+      <p id="identity" class="file-info">本站不提供韌體或內部 ROM，請自行選取合法持有的檔案。</p>
+    </section>
+    <section class="panel save-panel">
+      <div class="section-label"><span>整機快照與備份</span><span id="save-state">尚未保存</span></div>
+      <p class="muted">執行中每 15 秒、暫停與離開頁面時保存。恢復需要完全相同的韌體、內部 ROM 與核心版本。</p>
+      <div class="save-actions"><button id="save" disabled>立即保存</button><button id="export" disabled>匯出快照 ↗</button><button id="import" disabled>匯入快照</button></div>
+      <input id="save-file" type="file" accept=".json,application/json" class="visually-hidden">
+      <button id="flash-export" class="resume-button" disabled>匯出目前 Flash BIN ↗</button>
+      <p class="save-note">Flash BIN 含遊戲寫入的變更，無法代替完整快照；實體機寫回尚未驗證。瀏覽器資料可能被清除，請定期匯出備份。離開時的保存以瀏覽器能完成寫入為限。</p>
+    </section>
+    <section class="panel view-panel">
+      <div class="section-label"><span>畫面方向</span><span>保留原生畫面</span></div>
+      <button id="orientation-menu" class="resume-button" aria-pressed="false">一鍵橫向</button>
+      <p id="orientation-status" class="muted" aria-live="polite">自動跟隨畫面方向。</p>
+      <p class="save-note">橫向延伸兩側背景顏色，中央仍是完整 96 × 96 畫面。</p>
+    </section>
+    <details class="panel details-panel">
+      <summary>核心與計時資訊<span>＋</span></summary>
+      <p>按住螢幕 ABC 或鍵盤 A、B、C 操作；Menu 會暫停。短按會保留至少 50 毫秒的虛擬按鍵時間，供原生韌體辨識。</p>
+      <p>目前以每秒 1,200 萬條指令、48 MHz 計時器為實驗假設，尚未經實體機校準。目標每秒 64 批；效能不足時會變慢，選單顯示實際速度，不加速補跑。</p>
+      <p>主畫面數字是虛擬機累計執行時間，不是遊戲內設定的 RTC。整機功能與手機即時效能仍待驗證。</p>
+      <p id="technical">尚未載入核心。</p>
+    </details>
+    <details class="panel details-panel about-panel">
+      <summary>關於與授權<span>＋</span></summary>
+      <div class="about-content"><p>PenC Pocket 是非官方模擬器試作，與 Bandai、Digimon 或 MAME 官方無隸屬關係。網站不提供遊戲韌體。</p><p>整合原始碼採 GPL-3.0-or-later，第三方來源保留原授權。<a href="./licenses/THIRD-PARTY-NOTICES.txt" target="_blank" rel="noopener noreferrer">來源與授權聲明</a> · <a href="./licenses/GPL-3.0.txt" target="_blank" rel="noopener noreferrer">GPL 全文</a></p><p><a href="./downloads/penc-pocket-source.zip" download>下載這個版本的原始碼</a></p></div>
+    </details>
+    <p class="menu-foot">LOCAL FILES · EXACT MACHINE STATE · EXPERIMENTAL</p>
+  </div>
+</dialog>
+<script type="module" src="./machine-app.js"></script>
+</body>
+</html>
