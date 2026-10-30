@@ -23,6 +23,7 @@
     <div class="screen-caption"><span id="live-state">等待載入</span></div>
   </div>
   <div class="control-deck">
+    <button id="link-indicator" class="link-indicator" hidden aria-label="已連線，點一下中斷連線" title="點一下中斷連線">● 已連線 · 中斷</button>
     <div class="device-clock" title="虛擬機累計時間，並非遊戲內設定的時鐘"><small class="machine-clock-label">虛擬機累計</small><span id="clock">--:--:--</span></div>
     <div class="controls" aria-label="遊戲按鍵，鍵盤 A、B、C">
       <div><button class="game-key" data-key="A" disabled aria-label="A 選擇">A</button><span>SELECT</span></div>
@@ -40,8 +41,7 @@
     <div class="status-strip" aria-live="polite"><p id="status">選取 8 MiB PenC 韌體與 96 KiB PenC 內部 ROM。檔案與快照只保存在這台裝置，不會上傳。</p></div>
     <section class="panel machine-limitations">
       <div class="section-label"><span>實驗狀態</span><a href="./">返回原有模式 ↗</a></div>
-      <p class="muted">由內部 ROM 原生開機，支援畫面、ABC 與整機快照。聲音、晃動、連線與離線託管尚未接上；Menu、背景與關閉期間暫停，不補算離開時間。DMC 方彩不適用。</p>
-      <p class="muted">已知限制：原生 CPU 休眠後的按鍵喚醒尚未接通，可能停在黑畫面。測試期間請用 Menu 暫停，並事先匯出快照；休眠後可匯入先前的整機快照恢復。</p>
+      <p class="muted">由內部 ROM 原生開機，聲音、手機晃動、QR 配對與離線託管依載入的韌體啟用。整機時序與手機效能仍屬實驗，DMC 方彩不適用。</p>
       <p class="save-note">這個模式使用獨立快照，不能匯入原有模式的存檔。</p>
     </section>
     <section class="panel file-panel">
@@ -58,11 +58,37 @@
     </section>
     <section class="panel save-panel">
       <div class="section-label"><span>整機快照與備份</span><span id="save-state">尚未保存</span></div>
-      <p class="muted">執行中每 15 秒、暫停與離開頁面時保存。恢復需要完全相同的韌體、內部 ROM 與核心版本。</p>
+      <p class="muted">執行中每 15 秒、暫停與離開頁面時保存。恢復需要相同的韌體與內部 ROM；已確認相容的舊整機核心快照會自動轉換，並先保留原快照備份。</p>
       <div class="save-actions"><button id="save" disabled>立即保存</button><button id="export" disabled>匯出快照 ↗</button><button id="import" disabled>匯入快照</button></div>
       <input id="save-file" type="file" accept=".json,application/json" class="visually-hidden">
       <button id="flash-export" class="resume-button" disabled>匯出目前 Flash BIN ↗</button>
       <p class="save-note">Flash BIN 含遊戲寫入的變更，無法代替完整快照；實體機寫回尚未驗證。瀏覽器資料可能被清除，請定期匯出備份。離開時的保存以瀏覽器能完成寫入為限。</p>
+    </section>
+    <section class="panel custody-panel">
+      <div class="section-label"><span>離線託管</span><span>依韌體與狀態啟用</span></div>
+      <label class="remember custody-option"><input id="custody-enabled" type="checkbox" checked><span>回來後補算成長，避免新增照顧失誤</span></label>
+      <p id="custody-status" class="muted" aria-live="polite">載入後確認這份快照是否支援託管。</p>
+      <p class="save-note">支援的 R23 居家快照會在回來後快速結算成長，不增加照顧失誤；既有失誤不清除。不支援的韌體、遊戲操作選單或傷病狀態會暫停養成，不一次累加離開期間的處罰。關閉託管時，離開期間維持暫停。</p>
+    </section>
+    <section class="panel motion-panel">
+      <div class="section-label"><span>手機晃動</span><span>訓練與連線</span></div>
+      <button id="motion-enable" class="resume-button" aria-pressed="true">停用手機晃動</button>
+      <p id="motion-status" class="muted" aria-live="polite">預設開啟；按「開始／繼續」時，若出現動作權限請選允許。</p>
+      <p class="save-note">晃動交由遊戲本身計數。Menu、暫停及背景不收集輸入；靈敏度為網頁試作設定。</p>
+    </section>
+    <section class="panel sound-panel">
+      <div class="section-label"><span>聲音</span><span>跟隨遊戲音量</span></div>
+      <button id="sound-enable" class="resume-button" aria-pressed="true">停用聲音</button>
+      <p id="native-settings-status" class="muted">載入後顯示遊戲音量。</p>
+      <p class="muted">使用已確認的音高 +48 半音、2 倍速度。音色與音量以網頁近似呈現，並非實體喇叭波形。</p>
+      <button id="sound-preview" class="resume-button" disabled>試聽最近音效</button>
+      <p id="sound-status" class="muted" aria-live="polite">預設開啟；按「開始／繼續」時啟動聲音。</p>
+    </section>
+    <section class="panel">
+      <div class="section-label"><span>手機對手機</span><span>遊戲內連線</span></div>
+      <button id="link-open" class="resume-button" disabled>配對另一支手機 ↗</button>
+      <p id="relay-status" class="muted">正在確認配對服務與韌體支援。</p>
+      <p class="save-note">配對後回遊戲選擇 BATTLE／JOGRES。網路傳送原生封包，並非實體連接線的電氣時序。</p>
     </section>
     <section class="panel view-panel">
       <div class="section-label"><span>畫面方向</span><span>保留原生畫面</span></div>
@@ -74,7 +100,7 @@
       <summary>核心與計時資訊<span>＋</span></summary>
       <p>按住螢幕 ABC 或鍵盤 A、B、C 操作；Menu 會暫停。短按會保留至少 50 毫秒的虛擬按鍵時間，供原生韌體辨識。</p>
       <p>目前以每秒 1,200 萬條指令、48 MHz 計時器為實驗假設，尚未經實體機校準。目標每秒 64 批；效能不足時會變慢，選單顯示實際速度，不加速補跑。</p>
-      <p>主畫面數字是虛擬機累計執行時間，不是遊戲內設定的 RTC。整機功能與手機即時效能仍待驗證。</p>
+      <p>主畫面數字是虛擬機累計執行時間，不是遊戲內設定的 RTC。離開網頁時不會在背景持續執行，支援的離線託管會在回來後結算。實體手機效能與原機一致性仍待驗證。</p>
       <p id="technical">尚未載入核心。</p>
     </details>
     <details class="panel details-panel about-panel">
@@ -84,6 +110,31 @@
     <p class="menu-foot">LOCAL FILES · EXACT MACHINE STATE · EXPERIMENTAL</p>
   </div>
 </dialog>
+<dialog id="link-dialog" class="menu-dialog link-dialog" aria-labelledby="link-title">
+<header class="menu-header"><div><span class="eyebrow">PENC POCKET</span><h1 id="link-title">手機配對</h1></div><button id="link-close" aria-label="關閉配對畫面">×</button></header>
+<div class="menu-content">
+  <p class="link-intro">接通後，回到遊戲裡對戰與合體</p>
+  <p id="link-status" class="link-status" role="status">正在準備你的 QR 碼…</p>
+  <section id="link-entry" class="link-entry">
+    <button id="link-create" class="primary">產生 QR 碼／重試</button>
+  </section>
+  <section id="link-session" hidden>
+    <div class="link-qr-grid">
+      <div id="link-qr-wrap" class="link-qr-wrap"><canvas id="link-qr" aria-label="讓另一支手機掃描的連線 QR 碼"></canvas><div id="link-camera" hidden><video id="link-video" autoplay muted playsinline aria-label="掃描另一支手機的 QR 碼"></video></div></div>
+      <div id="link-scan-tools" class="link-scan-tools">
+        <button id="link-scan" class="primary">掃描對方 QR</button>
+        <label class="link-image-label" for="link-image">選擇 QR 圖片<input id="link-image" type="file" accept="image/*" class="visually-hidden"></label>
+        <p id="link-scan-status" class="save-note" role="status">兩邊都能掃描，任選一方即可。</p>
+        <details class="link-manual"><summary>改用代碼連線</summary><label for="link-code-input">對方的 8 碼代碼</label><input id="link-code-input" maxlength="12" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="例如 AB23CD45"><button id="link-join">連線</button></details>
+      </div>
+    </div>
+    <canvas id="link-scan-canvas" hidden></canvas>
+    <div class="link-code-row"><div><small id="link-role">讓對方掃描，或掃描對方</small><strong id="link-code">--------</strong></div><button id="link-copy">複製連結</button></div>
+    <button id="link-return" class="primary" hidden>回到遊戲</button>
+    <p class="save-note">接通後自動回到遊戲。雙方選擇相同的 BATTLE／JOGRES 模式，再依畫面操作 ABC。不同 BIN 需通訊相容。</p>
+    <button id="link-disconnect" class="resume-button">中斷連線</button>
+  </section>
+</div></dialog>
 <script type="module" src="./machine-app.js"></script>
 </body>
 </html>

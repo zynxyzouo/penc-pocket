@@ -3,12 +3,12 @@
 import qrcode from './vendor/qrcode-generator-2.0.4.mjs';
 const CODE=/^[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/;
 const appBase=()=>new URL('./',import.meta.url).href;
-export function pairUrl(code,base=appBase()){if(!CODE.test(code))throw Error('配對代碼格式錯誤。');return new URL('./#link='+code,base).href;}
+export function pairUrl(code,base=appBase()){if(!CODE.test(code))throw Error('配對代碼格式錯誤。');return new URL((new URL(base).pathname.endsWith('/machine.html')?'':'./')+'#link='+code,base).href;}
 export function parsePairCode(value,base=appBase()){
  const raw=String(value).trim(),code=raw.toUpperCase().replace(/[\s-]/g,'');if(CODE.test(code))return code;
  let u;try{u=new URL(raw);}catch{throw Error('請掃描 PenC Pocket 的連線 QR 碼。');}
  const app=new URL('./',base);
- if(u.origin!==app.origin||u.pathname!==app.pathname||u.search||u.username||u.password||!/^#link=[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/.test(u.hash))throw Error('這不是此網站的連線 QR 碼。');
+ if(u.origin!==app.origin||![app.pathname,new URL('./machine.html',app).pathname].includes(u.pathname)||u.search||u.username||u.password||!/^#link=[23456789ABCDEFGHJKLMNPQRSTUVWXYZ]{8}$/.test(u.hash))throw Error('這不是此網站的連線 QR 碼。');
  return u.hash.slice(6);
 }
 export function qrMatrix(text){const qr=qrcode(0,'M');qr.addData(text);qr.make();return Array.from({length:qr.getModuleCount()},(_,r)=>Array.from({length:qr.getModuleCount()},(_,c)=>qr.isDark(r,c)));}
