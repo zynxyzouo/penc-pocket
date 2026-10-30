@@ -89,6 +89,35 @@ class PeripheralTests(unittest.TestCase):
         self.assertEqual(c.read(0x3000), 0xFFC7)
         self.assertEqual(c.read(0x3071), 0xE000)
 
+    def test_sleep_gpio_wakeup_respects_active_low_mask_and_input_direction(self):
+        c = self.c
+        c.write(0x300C, 0xFFEF)  # Only B is an unmasked wake input.
+        c.write(0x3036, 0x5555)
+        c.lib.gp_keys(8)
+        self.assertEqual(c.metrics()[14], 1)
+        c.lib.gp_keys(16)
+        self.assertEqual(c.metrics()[14], 0)
+        c.lib.gp_keys(0)
+        c.write(0x3002, 16)  # Output pins cannot wake on external key changes.
+        c.write(0x3036, 0x5555)
+        c.lib.gp_keys(16)
+        self.assertEqual(c.metrics()[14], 1)
+
+    def test_sleep_timebase_wakes_even_when_cpu_interrupts_are_disabled(self):
+        c = self.c
+        c.write(0x3053, 1)  # Native sleep loop polls the enabled 2 Hz source.
+        c.write(0x3036, 0x5555)
+        c.lib.gp_run(6000001)
+        self.assertEqual(c.metrics()[14], 0)
+        self.assertGreater(c.metrics()[7], 0)
+
+    def test_masked_timebase_does_not_wake_sleep(self):
+        c = self.c
+        c.write(0x3053, 0)
+        c.write(0x3036, 0x5555)
+        c.lib.gp_run(6000001)
+        self.assertEqual(c.metrics()[14], 1)
+
     def test_flash_jedec_sleep_pagewrap_and_erase_dirty(self):
         c = self.c
         self.assertEqual(c.command(0x9F, 0, 0, 0), [255, 0xC2, 0x20, 0x17])

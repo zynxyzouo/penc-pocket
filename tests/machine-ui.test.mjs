@@ -136,3 +136,28 @@ test('forgetting inputs removes only this machine input record and keeps its sna
   const key=machineKey(identity);assert.equal(f.data.has(key+':inputs'),false);assert.ok(f.data.has(key+':save'));
   assert.equal(f.data.get('gpce4:remember'),false);
 });
+
+test('pause during awaited custody cannot restart gameplay in the background',async()=>{
+  const f=fixture();await f.session.load(inputs());f.session.awaySince=Date.now()-20000;
+  let finish;const rpc=f.session.rpc;f.session.rpc=(op,args)=>op==='custody'?new Promise(resolve=>{finish=()=>resolve({...frame(0),custody:{remaining_seconds:0,processed_seconds:20,blocked_reason:null}});}):rpc(op,args);
+  const resuming=f.session.resumeWithCustody();await f.session.pause(false);finish();await resuming;
+  assert.equal(f.session.running,false);assert.equal(f.calls.some(c=>c.op==='run'),false);
+});
+
+test('known prior core save migrates with original backup preserved',async()=>{
+  const f=fixture(),prior={...identity,core_sha256:'03ddb497ec7559d88bc563e0eddaff2f847137edaebb10c1841db0a9f34cd76b'},oldKey=machineKey(prior);
+  const saved={schema:'penc-pocket-gpce4-v1',identity:prior,saved_at:'2026-10-30T00:00:00Z',snapshot:{exactState:42}};
+  f.data.set('gpce4:last',{key:oldKey,identity:prior});f.data.set(oldKey+':save',saved);
+  await f.session.load(inputs());assert.equal(f.session.frame.virtual_seconds,42);
+  assert.equal(f.data.get(oldKey+':save'),saved);assert.equal(f.data.get(machineKey(identity)+':before-migration'),saved);
+  assert.equal(f.data.get('gpce4:last').key,machineKey(identity));
+});
+
+test('successful disconnect saves native state before reporting completion; failure does not save',async()=>{
+  const f=fixture();await f.session.load(inputs());f.session.frame.native_link={connected:true};
+  const rpc=f.session.rpc;let reject=false;
+  f.session.rpc=(op,args)=>op==='native-link-disconnect'?(reject?Promise.reject(Error('native cancel failed')):Promise.resolve({...frame(0),native_link:{connected:false}})):rpc(op,args);
+  await f.session.disconnect();assert.ok(f.data.has(machineKey(identity)+':save'));assert.equal(f.session.running,false);
+  const count=f.writes.length;f.session.frame.native_link={connected:true};reject=true;
+  await assert.rejects(f.session.disconnect(),/cancel failed/);assert.equal(f.writes.length,count);
+});

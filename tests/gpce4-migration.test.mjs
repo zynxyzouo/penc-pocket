@@ -1,0 +1,7 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
+import {Gpce4Machine,sha256} from '../public/gpce4-engine.js';
+const old='03ddb497ec7559d88bc563e0eddaff2f847137edaebb10c1841db0a9f34cd76b';
+async function fixture(){const bytes=Buffer.from((await readFile(new URL('../public/core/gpce4.wasm.b64',import.meta.url),'utf8')).trim(),'base64');const m=await Gpce4Machine.create(bytes,{});const rom=new Uint8Array(98304);new DataView(rom.buffer).setUint16(46,0x4000,true);rom[0]=0x41;rom[1]=0xee;await m.load(new Uint8Array(8388608),rom);return m;}
+async function legacy(snapshot,core=old){const {checksum,...data}=snapshot;data.core_sha256=core;return {...data,checksum:await sha256(new TextEncoder().encode(JSON.stringify(data)))};}
+test('known prior ABI restores state into current core without rebooting',async()=>{const m=await fixture();m.run(2000);const prior=await legacy(await m.snapshot());m.run(1000);const result=await m.restore(prior);assert.equal(result.instructions,2000);assert.equal(result.identity.core_sha256,m.core);assert.equal((await m.snapshot()).state,prior.state);});
+test('unknown core and tampered previous checksum are rejected atomically',async()=>{const m=await fixture();m.run(2000);const original=await m.snapshot();await assert.rejects(m.restore(await legacy(original,'a'.repeat(64))),/版本/);const bad=await legacy(original);bad.checksum='0'.repeat(64);await assert.rejects(m.restore(bad),/校驗/);assert.equal((await m.snapshot()).checksum,original.checksum);});

@@ -9,6 +9,9 @@ test('QR remains inside the project and round-trips through the decoder',()=>{
   assert.equal(url,base+'#link='+code);
   assert.equal(parsePairCode(url,base),code);
   assert.equal(pairUrl(code,base+'index.html'),url);
+  assert.equal(pairUrl(code,base+'machine.html'),base+'machine.html#link='+code);
+  assert.equal(parsePairCode(base+'machine.html#link='+code,base),code);
+  assert.equal(parsePairCode(url,base+'machine.html'),code);
   for(const bad of ['https://example.github.io/#link='+code,'https://example.github.io/other/#link='+code,'https://evil.example/penc-pocket/#link='+code,base+'?key=x#link='+code,base+'#link='+code+'&token=x'])assert.throws(()=>parsePairCode(bad,base));
   const matrix=qrMatrix(url),scale=5,quiet=4,n=matrix.length,size=(n+quiet*2)*scale;
   const pixels=new Uint8ClampedArray(size*size*4).fill(255);
