@@ -1,6 +1,6 @@
 {
   "file": "gpce4.wasm.b64",
-  "sha256": "03ddb497ec7559d88bc563e0eddaff2f847137edaebb10c1841db0a9f34cd76b",
+  "sha256": "cd653c32210e8645287e5323ae5bf9c55e2d3f6240b2ccfe5b5a1d614e2efd66",
   "internal_rom_sha256": "d032000318fb0c7944064db6a3ac1479bdb498aa61715ca0ffaf34182f266b79",
   "internal_rom_bytes": 98304,
   "firmware_bytes": 8388608,

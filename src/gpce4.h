@@ -14,4 +14,5 @@ void gp_cpu_reset(void);
 int gp_cpu_step(void);
 uint32_t gp_cpu_pc(void);
 void gp_cpu_irq(uint32_t line, uint32_t level);
+void gp_observe_call(uint32_t target);
 #endif

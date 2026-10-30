@@ -64,3 +64,27 @@
 Added locally authored freestanding C instruction execution, compiled to Wasm, with checked RAM and atomic yields to the existing host adapters. Adaptive dispatch retains the cheaper reference path for short native entries. Existing MAME-derived semantics, GPL and other notices remain; this is not a clean-room licensing claim. Stock/DMC and snapshot identity files stay unchanged. Source, build recipe, differential tests and base64-encoded compiled artifact are included.
 
 2026-10-30: Added an optional GPCE4 C/Wasm reset-boot mode ported from the local unsp.py/soc.py machine model. Original Python oracle is included under reference/gpce4. Real ROM and firmware remain local user inputs. This mode includes IRQ, SPI, LCD, timers and isolated exact-machine snapshots; sound/motion/link/offline custody remain unconnected. Existing default mode and snapshots are retained.
+
+## 2026-10-31 — GPCE4 peripherals and continuity
+
+- Added masked GPIO and enabled peripheral wake independently of CPU IRQ delivery;
+  native ROM resumes its sleep loop and clocks. Snapshot ABI v1 is unchanged.
+- Observe admitted native sound calls without replacing native busy completion.
+  Reuse user-calibrated approximate browser audio (+48 semitones, 2x). Motion
+  supplies a bounded input latch consumed by the original firmware.
+- Reconnect admitted native packet wrappers to QR relay transport. Different
+  compatible BINs may pair. Native code owns Battle/Jogres validation, results,
+  animation and Flash writes. This is not physical wire timing emulation.
+- R23 offline custody settles native event boundaries after synchronizing at a
+  safe UI entry, including native wake from HOME sleep. Unsupported states and
+  existing injury/illness remain paused. Transactions retain original care history,
+  restore failed changes and clear ephemeral input/audio. No background service
+  runs the game while the page is closed.
+- Migrate only the explicitly known previous GPCE4 core snapshot with original
+  backup retained. Connected sessions cannot be serialized; successful disconnect
+  saves before completion. Settled animations may finish after disconnection.
+- Regression evidence includes real-ROM native boot/hatch/sleep/wake and two-day
+  custody, plus R23/R20 native Battle/Jogres using declared eligible test fixtures,
+  cold Flash reload and byte-identical animation snapshot continuation. Physical
+  phone performance, accelerometer behavior and speaker waveform remain unmeasured.
+- Source, GPL/BSD notices and firmware-local-only release policy remain unchanged.

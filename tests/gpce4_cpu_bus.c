@@ -8,6 +8,7 @@
 #define API __attribute__((visibility("default")))
 #endif
 static uint32_t seed, count, trace_count, fail_address;
+void gp_observe_call(uint32_t target) { (void)target; }
 static uint32_t addresses[128], values[128], trace[256][3];
 API void gpce4_cpu_test_begin(uint32_t value) {
  seed=value; count=trace_count=0; fail_address=0xffffffffu;

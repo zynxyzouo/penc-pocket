@@ -12,5 +12,7 @@
 .file-panel:has(#bin-file:disabled) .file-button{opacity:.5;pointer-events:none}
 .playbar{flex-wrap:wrap}.playbar #speed{font-size:9px;white-space:nowrap}
 #technical{overflow-wrap:anywhere}
+.custody-option{align-items:flex-start;line-height:1.7;margin:10px 0}.custody-option input{flex:none;margin-top:4px}
+.custody-panel .save-note,.sound-panel .muted{line-height:1.8}
 @container device (orientation:portrait){.machine-badge{left:20px;right:auto;top:57px;bottom:auto;font-size:8px}.device-clock{max-width:205px;align-self:center}.control-deck{gap:20px}}
 @container device (orientation:landscape) and (max-height:440px){.machine-badge{right:10px;bottom:7px;font-size:8px;padding:2px 5px}.machine-clock-label{font-size:7px}.device-clock{min-height:42px;padding:3px}}

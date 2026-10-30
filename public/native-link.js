@@ -6,8 +6,8 @@ import {RelayTransport} from './relay-transport.js';
 const $=id=>document.getElementById(id);
 const token=()=>[...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,'0')).join('');
 export class LinkRoom {
- constructor({rpc,prepare,resume,display,onError=e=>this.message(e.message),renderQR=drawPairQR,scanner,endpoint=relayEndpoint,transport}){
-  Object.assign(this,{rpc,prepare,resume,display,onError,renderQR,endpoint});
+ constructor({rpc,prepare,resume,display,onError=e=>this.message(e.message),renderQR=drawPairQR,scanner,endpoint=relayEndpoint,transport,pairBase}){
+  Object.assign(this,{rpc,prepare,resume,display,onError,renderQR,endpoint,pairBase});
   this.transport=transport||(endpoint?new RelayTransport({endpoint}):null);
   this.session=null;this.engine=false;this.generation=0;this.busy=false;this.autoResume=false;
   this.scanner=scanner||new QrScanner({video:$('link-video'),canvas:$('link-scan-canvas'),onCode:value=>{this.stopScanner();void this.pair(value);},onStatus:(text,active)=>{this.scanning=active;this.scanUI();$('link-scan-status').textContent=text;}});
@@ -16,7 +16,7 @@ export class LinkRoom {
   $('link-return').onclick=()=>this.returnToGame();$('link-disconnect').onclick=$('link-indicator').onclick=()=>this.end().catch(()=>{});
   $('link-scan').onclick=()=>this.scanning?this.stopScanner():this.scanner.start();
   $('link-image').onchange=e=>{this.stopScanner();void this.scanner.image(e.target.files[0]);e.target.value='';};
-  $('link-copy').onclick=async()=>{try{await navigator.clipboard.writeText(pairUrl(this.session.code));this.message('連線連結已複製。');}catch{this.message('請掃描 QR 碼，或手動輸入下方代碼。');}};
+  $('link-copy').onclick=async()=>{try{await navigator.clipboard.writeText(pairUrl(this.session.code,this.pairBase));this.message('連線連結已複製。');}catch{this.message('請掃描 QR 碼，或手動輸入下方代碼。');}};
   document.addEventListener('visibilitychange',()=>{if(document.hidden)this.stopScanner();});
   globalThis.addEventListener?.('pagehide',()=>{this.stopScanner();if(this.session)void this.end().catch(()=>{});});
  }
@@ -31,7 +31,7 @@ export class LinkRoom {
   $('link-indicator').hidden=!hasCode&&!this.cleanupNeeded;$('link-indicator').disabled=!!this.ending;
   $('link-indicator').textContent=this.ending?'斷線中…':this.cleanupNeeded?'重試斷線':this.engine?'● 已連線 · 中斷':'○ 等待連線 · 中斷';
   $('link-indicator').setAttribute('aria-label',this.engine?'已連線，點一下中斷連線':'等待連線，點一下中斷');
-  if(hasCode){$('link-code').textContent=s.code;$('link-role').textContent=this.engine?'兩支手機已接通':'讓對方掃描，或掃描對方';if(this.drawnCode!==s.code){this.renderQR($('link-qr'),s.code);this.drawnCode=s.code;}}
+  if(hasCode){$('link-code').textContent=s.code;$('link-role').textContent=this.engine?'兩支手機已接通':'讓對方掃描，或掃描對方';if(this.drawnCode!==s.code){this.renderQR($('link-qr'),s.code,this.pairBase);this.drawnCode=s.code;}}
  }
  async open({peer}={}){
   if(!this.endpoint){this.message(relayUnavailable);return;}
@@ -52,7 +52,7 @@ export class LinkRoom {
  async followInvite(){
   if(!this.endpoint){this.message(relayUnavailable);return;}
   if(!globalThis.location?.hash?.startsWith('#link='))return;
-  let peer;try{peer=parsePairCode(location.href);}catch(e){this.message(e.message);return;}
+  let peer;try{peer=parsePairCode(location.href,this.pairBase);}catch(e){this.message(e.message);return;}
   await this.open({peer});if(this.session?.peer||this.engine)history.replaceState(null,'',location.pathname+location.search);
  }
  close(){this.stopScanner();this.autoResume=false;$('link-dialog').close();if(!$('menu-dialog').open)$('menu-dialog').showModal();}
@@ -65,7 +65,7 @@ export class LinkRoom {
  async pair(value){
   if(!this.endpoint){this.message(relayUnavailable);return;}
   if(this.engine||this.ending||this.cleanupNeeded)return;
-  let peer;try{peer=parsePairCode(value);}catch(e){this.message(e.message);return;}
+  let peer;try{peer=parsePairCode(value,this.pairBase);}catch(e){this.message(e.message);return;}
   this.session||={token:token(),code:null};
   if(peer===this.session.code){this.message('這是自己的 QR 碼，請掃描另一支手機。');return;}
   this.stopScanner();this.session.peer=peer;this.message('正在接通另一支手機…');clearTimeout(this.timer);await this.exchange();

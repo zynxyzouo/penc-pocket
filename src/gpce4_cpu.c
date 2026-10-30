@@ -37,6 +37,7 @@ static int pop(uint32_t reg,uint32_t *value) {
  return !cpu.fault;
 }
 static void call(uint32_t target) {
+ gp_observe_call(target);
  if(!push(cpu.r[7],0)||!push(cpu.r[6],0))return;
  setpc(target);
 }
